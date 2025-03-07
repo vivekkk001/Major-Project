@@ -1,5 +1,6 @@
 const bcrypt = require("bcrypt");
-const pool = require("../config/db"); // Import DB connection
+const jwt = require("jsonwebtoken");
+const pool = require("../config/db");
 
 exports.signup = async (req, res) => {
   try {
@@ -37,7 +38,14 @@ exports.login = async (req, res) => {
     const validPassword = await bcrypt.compare(password, user.rows[0].password);
     if (!validPassword) return res.status(401).json({ message: "Invalid credentials" });
 
-    res.status(200).json({ message: "Login successful" });
+    // Generate JWT Token
+    const token = jwt.sign(
+      { user_id: user.rows[0].id, email: user.rows[0].email, role: "citizen" },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" } // Token expires in 1 day
+    );
+
+    res.status(200).json({ message: "Login successful", token });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
