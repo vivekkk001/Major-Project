@@ -13,11 +13,12 @@ router.post("/", verifyToken, async (req, res) => {
     console.log("User Data from Token:", req.user);
 
     // 🔹 Step 1: Call ML API to Get Department
-    const mlResponse = await axios.post("http://127.0.0.1:8000/predict", {
+    const mlResponse = await axios.post("http://localhost:8000/predict", {
       description,
     });
+    console.log("ML API Response:", mlResponse.data);
     const department = mlResponse.data.department;
-
+ 
     // 🔹 Step 2: Insert Complaint into Database (Status = "Pending")
     const newComplaint = await pool.query(
       "INSERT INTO complaints (citizen_name, department, description, image_url, status, created_at, latitude, longitude) VALUES ($1, $2, $3, $4, 'Pending', NOW(), $5, $6) RETURNING *",

@@ -1,0 +1,13 @@
+{
+  "name": "major-project",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "concurrently \"cd complaints-backend/src && node server.js\" \"cd ml-service && python -m uvicorn ml_api:app --reload\" \"cd frontend && npm start\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
