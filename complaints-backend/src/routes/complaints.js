@@ -2,6 +2,7 @@ const express = require("express");
 const axios = require("axios"); // For calling ML API
 const pool = require("../config/db");
 const verifyToken = require("../middleware/auth");
+const sendEmail = require("../utils/sendEmail");
 
 const router = express.Router();
 
@@ -18,12 +19,15 @@ router.post("/", verifyToken, async (req, res) => {
     });
     console.log("ML API Response:", mlResponse.data);
     const department = mlResponse.data.department;
- 
+
     // 🔹 Step 2: Insert Complaint into Database (Status = "Pending")
     const newComplaint = await pool.query(
       "INSERT INTO complaints (citizen_name, department, description, image_url, status, created_at, latitude, longitude) VALUES ($1, $2, $3, $4, 'Pending', NOW(), $5, $6) RETURNING *",
       [citizen_name, department, description, image_url, latitude, longitude]
     );
+
+    // 🔹 Step 3: Send Email to the Respective Department
+    await sendEmail(newComplaint.rows[0]);
 
     res.status(201).json({
       message: "Complaint submitted successfully",
