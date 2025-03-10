@@ -45,7 +45,12 @@ exports.login = async (req, res) => {
       { expiresIn: "1d" }
     );
     
-    
+    // Set JWT in httpOnly Cookie
+    res.cookie("token", token, { 
+      httpOnly: true,  // Prevents client-side access
+      secure: process.env.NODE_ENV === "production",    // Requires HTTPS (set to false if testing locally)
+      sameSite: "Lax" // Helps prevent CSRF attacks
+    });
 
     res.status(200).json({ message: "Login successful", token });
   } catch (error) {

@@ -21,6 +21,12 @@ exports.login = async (req, res) => {
       { expiresIn: "1d" } // Token expires in 1 day
     );
 
+    res.cookie("token", token, { 
+      httpOnly: true, 
+      secure: process.env.NODE_ENV === "production", 
+      sameSite: "Lax"
+    });
+
     res.status(200).json({ message: "Login successful", token });
   } catch (error) {
     console.error(error);
