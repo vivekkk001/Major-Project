@@ -1,6 +1,6 @@
 # **AI-Powered Smart City Grievance Redressal System**
 
-A **user-friendly, feature-rich web application** designed to streamline municipal grievance redressal using **Machine Learning, OpenAI Vision API, and Blockchain**. This system ensures **automated complaint classification, image verification, and tamper-proof tracking**, enhancing efficiency and transparency.
+A **user-friendly, feature-rich web application** designed to streamline municipal grievance redressal using **Machine Learning, AI, and Blockchain**. This system ensures **automated complaint classification, image verification, and tamper-proof tracking**, enhancing efficiency and transparency.
 
 ---
 
