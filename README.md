@@ -17,7 +17,6 @@ A **user-friendly, feature-rich web application** designed to streamline municip
 - **Frontend:** React.js  
 - **Backend:** Node.js, Express.js  
 - **Database:** PostgreSQL  
-- **Machine Learning:** Scikit-Learn (for complaint classification)  
 - **Cloud & DevOps:** GCP, Docker  
 - **Blockchain:** Hardhat, Ethers.js (for complaint tracking)  
 
