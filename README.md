@@ -39,5 +39,5 @@ A **user-friendly, feature-rich web application** designed to streamline municip
 
 ---
 
-### 📢 **Contributions & Feedback**
-Feel free to contribute or provide feedback! Let's make city grievance redressal **smarter, faster, and more transparent**. 🚀
+### 📢 **Feedback**
+Feel free to provide feedback! Let's make city grievance redressal **smarter, faster, and more transparent**. 🚀
