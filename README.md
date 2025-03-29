@@ -4,7 +4,7 @@ A **user-friendly, feature-rich web application** designed to streamline municip
 
 ---
 
-## 🚀 **Features**
+##  **Features**
 - **AI-Based Complaint Classification** – Automatically categorizes complaints into relevant municipal departments using ML.  
 - **Image Verification with Vision API** – Ensures submitted images align with complaint descriptions before processing.  
 - **Real-Time Status Updates** – Citizens receive instant notifications as complaints progress.  
@@ -13,7 +13,7 @@ A **user-friendly, feature-rich web application** designed to streamline municip
 
 ---
 
-## 🏗 **Tech Stack**
+##  **Tech Stack**
 - **Frontend:** React.js  
 - **Backend:** Node.js, Express.js  
 - **Database:** PostgreSQL  
@@ -22,7 +22,7 @@ A **user-friendly, feature-rich web application** designed to streamline municip
 
 ---
 
-## 📌 **How It Works**
+##  **How It Works**
 1️⃣ Citizen submits a complaint with an image & description.  
 2️⃣ **ML model** classifies it into the appropriate municipal department.  
 3️⃣ **Vision API** verifies if the image aligns with the description.  
@@ -32,12 +32,12 @@ A **user-friendly, feature-rich web application** designed to streamline municip
 
 ---
 
-## 📬 **Future Enhancements**
-- 🏛️ **Multilingual Support** for broader accessibility.  
-- 📊 **Analytics Dashboard** for municipal insights.  
-- 🔗 **Integration with Government APIs** for automated workflow.  
+##  **Future Enhancements**
+-  **Multilingual Support** for broader accessibility.  
+-  **Analytics Dashboard** for municipal insights.  
+-  **Integration with Government APIs** for automated workflow.  
 
 ---
 
-### 📢 **Feedback**
+###  **Feedback**
 Feel free to provide feedback! Let's make city grievance redressal **smarter, faster, and more transparent**. 🚀
