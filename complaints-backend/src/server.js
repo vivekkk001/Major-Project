@@ -1,12 +1,16 @@
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const bodyParser = require("body-parser");
+
 const pool = require("./config/db"); // Import DB connection
 const app = express();
 
 app.use(cookieParser());
 app.use(cors());
 app.use(express.json()); // Middleware to parse JSON
+app.use(bodyParser.json());  // ✅ Parse JSON requests
+app.use(bodyParser.urlencoded({ extended: true })); 
 
 // Import Routes
 const citizenRoutes = require("./routes/citizen");
