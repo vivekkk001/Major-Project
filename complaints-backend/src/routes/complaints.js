@@ -3,6 +3,7 @@ const axios = require("axios");
 const pool = require("../config/db");
 const verifyToken = require("../middleware/auth");
 const { sendDepartmentEmail, sendCitizenEmail } = require("../utils/sendEmail");
+const blockchainService = require("../utils/blockchainService"); // Import blockchain service
 
 const router = express.Router();
 
@@ -34,7 +35,24 @@ router.post("/", verifyToken, async (req, res) => {
       ]
     );
     
-    // 🔹 Step 3: Send Email to the Respective Department
+    // 🔹 Step 3: Record to Blockchain
+    try {
+      const complaintId = newComplaint.rows[0].complaint_id.toString();
+      const txHash = await blockchainService.addComplaint(complaintId);
+      
+      // Store transaction hash in database (optional)
+      await pool.query(
+        "UPDATE complaints SET blockchain_tx_hash = $1 WHERE complaint_id = $2",
+        [txHash, complaintId]
+      );
+      
+      console.log(`Complaint ${complaintId} recorded on blockchain. Tx: ${txHash}`);
+    } catch (blockchainError) {
+      // Log error but don't fail the request if blockchain recording fails
+      console.error("Blockchain recording error:", blockchainError);
+    }
+    
+    // 🔹 Step 4: Send Email to the Respective Department
     await sendDepartmentEmail(newComplaint.rows[0]);
 
     res.status(201).json({
@@ -65,6 +83,24 @@ router.put("/update-status", verifyToken, async (req, res) => {
 
     if (updateResult.rows.length === 0) {
       return res.status(404).json({ message: "Complaint not found" });
+    }
+
+    // Update status on blockchain
+    try {
+      const txHash = await blockchainService.updateStatus(complaintId.toString(), newStatus);
+      
+      // Store transaction hash in database (optional)
+      await pool.query(
+        `INSERT INTO complaint_status_history 
+          (complaint_id, status, blockchain_tx_hash) 
+         VALUES ($1, $2, $3)`,
+        [complaintId, newStatus, txHash]
+      );
+      
+      console.log(`Status updated on blockchain for complaint ${complaintId}. Tx: ${txHash}`);
+    } catch (blockchainError) {
+      // Log error but don't fail the request if blockchain update fails
+      console.error("Blockchain status update error:", blockchainError);
     }
 
     // Send Email Notification to Citizen
@@ -123,6 +159,57 @@ router.get("/all", verifyToken, async (req, res) => {
     res.json(complaints.rows);
   } catch (error) {
     console.error("Error fetching all complaints:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+// 📌 New route: Verify complaint on blockchain
+router.get("/verify/:id", verifyToken, async (req, res) => {
+  try {
+    const complaintId = req.params.id;
+    
+    // Get complaint from database
+    const dbResult = await pool.query(
+      "SELECT * FROM complaints WHERE complaint_id = $1",
+      [complaintId]
+    );
+    
+    if (dbResult.rows.length === 0) {
+      return res.status(404).json({ message: "Complaint not found" });
+    }
+    
+    const dbComplaint = dbResult.rows[0];
+    
+    // Get complaint data from blockchain
+    try {
+      const blockchainData = await blockchainService.getComplaint(complaintId.toString());
+      
+      // Verify that DB status matches latest blockchain status
+      const latestBlockchainStatus = blockchainData.statusUpdates[blockchainData.statusUpdates.length - 1];
+      const isVerified = dbComplaint.status === latestBlockchainStatus;
+      
+      res.json({
+        verified: isVerified,
+        message: isVerified 
+          ? "Complaint record verified on blockchain" 
+          : "Warning: Database record doesn't match blockchain record",
+        dbRecord: dbComplaint,
+        blockchainRecord: {
+          complaintId: blockchainData.complaintId,
+          createdAt: blockchainData.timestamp,
+          statusHistory: blockchainData.statusUpdates
+        }
+      });
+    } catch (blockchainError) {
+      console.error("Blockchain verification error:", blockchainError);
+      res.status(500).json({ 
+        verified: false, 
+        message: "Failed to verify on blockchain",
+        error: blockchainError.message
+      });
+    }
+  } catch (error) {
+    console.error("Error verifying complaint:", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
