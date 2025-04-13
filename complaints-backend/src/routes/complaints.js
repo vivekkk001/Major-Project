@@ -19,39 +19,47 @@ router.post("/", verifyToken, async (req, res) => {
     console.log("ML API Response:", mlResponse.data);
     const department = mlResponse.data.department;
 
+    // Step 0.5: Generate a unique, increment-only complaint_id
+    const counterRes = await pool.query("SELECT last_used_id FROM complaint_counter WHERE id = 1");
+    const newComplaintId = counterRes.rows[0].last_used_id + 1;
+
+    // Update the counter
+    await pool.query("UPDATE complaint_counter SET last_used_id = $1 WHERE id = 1", [newComplaintId]);
+
     // 🔹 Step 2: Insert Complaint into Database
     const newComplaint = await pool.query(
       `INSERT INTO complaints 
-        (citizen_name, department, description, image_url, latitude, longitude)
-       VALUES ($1, $2, $3, $4, $5, $6)
+        (complaint_id, citizen_name, department, description, image_url, latitude, longitude)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING *`,
       [
-        citizen_name,        // From JWT token
-        department,          // From ML API
-        description,         // From req.body
-        image_url,           // From req.body
-        latitude,            // From req.body
-        longitude            // From req.body
+        newComplaintId,
+        citizen_name,
+        department,
+        description,
+        image_url,
+        latitude,
+        longitude
       ]
     );
     
     // 🔹 Step 3: Record to Blockchain
     try {
-      const complaintId = newComplaint.rows[0].complaint_id.toString();
+      const complaintId = newComplaintId.toString();
       const txHash = await blockchainService.addComplaint(complaintId);
-      
+
       // Store transaction hash in database (optional)
       await pool.query(
         "UPDATE complaints SET blockchain_tx_hash = $1 WHERE complaint_id = $2",
         [txHash, complaintId]
       );
-      
+
       console.log(`Complaint ${complaintId} recorded on blockchain. Tx: ${txHash}`);
     } catch (blockchainError) {
       // Log error but don't fail the request if blockchain recording fails
       console.error("Blockchain recording error:", blockchainError);
     }
-    
+
     // 🔹 Step 4: Send Email to the Respective Department
     await sendDepartmentEmail(newComplaint.rows[0]);
 
@@ -69,7 +77,7 @@ router.post("/", verifyToken, async (req, res) => {
 router.put("/update-status", verifyToken, async (req, res) => {
   try {
     const { complaintId, newStatus } = req.body;
-    
+
     // Check if the user is an official
     if (req.user.role !== 'official') {
       return res.status(403).json({ message: "Unauthorized: Only officials can update complaint status" });
@@ -88,7 +96,7 @@ router.put("/update-status", verifyToken, async (req, res) => {
     // Update status on blockchain
     try {
       const txHash = await blockchainService.updateStatus(complaintId.toString(), newStatus);
-      
+
       // Store transaction hash in database (optional)
       await pool.query(
         `INSERT INTO complaint_status_history 
@@ -96,7 +104,7 @@ router.put("/update-status", verifyToken, async (req, res) => {
          VALUES ($1, $2, $3)`,
         [complaintId, newStatus, txHash]
       );
-      
+
       console.log(`Status updated on blockchain for complaint ${complaintId}. Tx: ${txHash}`);
     } catch (blockchainError) {
       // Log error but don't fail the request if blockchain update fails
@@ -106,7 +114,7 @@ router.put("/update-status", verifyToken, async (req, res) => {
     // Send Email Notification to Citizen
     await sendCitizenEmail(complaintId, newStatus);
 
-    res.json({ 
+    res.json({
       message: "Status updated and email sent to citizen",
       complaint: updateResult.rows[0]
     });
@@ -120,12 +128,12 @@ router.put("/update-status", verifyToken, async (req, res) => {
 router.get("/my-complaints", verifyToken, async (req, res) => {
   try {
     const citizenName = req.user.name;
-    
+
     const complaints = await pool.query(
       "SELECT * FROM complaints WHERE citizen_name = $1 ORDER BY created_at DESC",
       [citizenName]
     );
-    
+
     res.json(complaints.rows);
   } catch (error) {
     console.error("Error fetching complaints:", error);
@@ -140,11 +148,11 @@ router.get("/all", verifyToken, async (req, res) => {
     if (req.user.role !== 'official') {
       return res.status(403).json({ message: "Unauthorized: Only officials can view all complaints" });
     }
-    
+
     // Officials can filter by department
     const { department } = req.query;
     let complaints;
-    
+
     if (department) {
       complaints = await pool.query(
         "SELECT * FROM complaints WHERE department = $1 ORDER BY created_at DESC",
@@ -155,7 +163,7 @@ router.get("/all", verifyToken, async (req, res) => {
         "SELECT * FROM complaints ORDER BY created_at DESC"
       );
     }
-    
+
     res.json(complaints.rows);
   } catch (error) {
     console.error("Error fetching all complaints:", error);
@@ -167,31 +175,31 @@ router.get("/all", verifyToken, async (req, res) => {
 router.get("/verify/:id", verifyToken, async (req, res) => {
   try {
     const complaintId = req.params.id;
-    
+
     // Get complaint from database
     const dbResult = await pool.query(
       "SELECT * FROM complaints WHERE complaint_id = $1",
       [complaintId]
     );
-    
+
     if (dbResult.rows.length === 0) {
       return res.status(404).json({ message: "Complaint not found" });
     }
-    
+
     const dbComplaint = dbResult.rows[0];
-    
+
     // Get complaint data from blockchain
     try {
       const blockchainData = await blockchainService.getComplaint(complaintId.toString());
-      
+
       // Verify that DB status matches latest blockchain status
       const latestBlockchainStatus = blockchainData.statusUpdates[blockchainData.statusUpdates.length - 1];
       const isVerified = dbComplaint.status === latestBlockchainStatus;
-      
+
       res.json({
         verified: isVerified,
-        message: isVerified 
-          ? "Complaint record verified on blockchain" 
+        message: isVerified
+          ? "Complaint record verified on blockchain"
           : "Warning: Database record doesn't match blockchain record",
         dbRecord: dbComplaint,
         blockchainRecord: {
@@ -202,8 +210,8 @@ router.get("/verify/:id", verifyToken, async (req, res) => {
       });
     } catch (blockchainError) {
       console.error("Blockchain verification error:", blockchainError);
-      res.status(500).json({ 
-        verified: false, 
+      res.status(500).json({
+        verified: false,
         message: "Failed to verify on blockchain",
         error: blockchainError.message
       });

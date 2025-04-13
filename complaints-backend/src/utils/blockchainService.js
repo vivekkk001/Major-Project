@@ -24,7 +24,8 @@ const privateKey = process.env.BLOCKCHAIN_PRIVATE_KEY;
 let provider, wallet, contract;
 
 try {
-  provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+  // Updated for ethers v6
+  provider = new ethers.JsonRpcProvider(rpcUrl);
   wallet = new ethers.Wallet(privateKey, provider);
   contract = new ethers.Contract(contractAddress, getContractABI(), wallet);
   console.log("Blockchain service initialized successfully");
@@ -45,8 +46,8 @@ const blockchainService = {
       const tx = await contract.addComplaint(complaintId);
       const receipt = await tx.wait();
       
-      console.log(`Complaint ${complaintId} added to blockchain. Tx hash: ${receipt.transactionHash}`);
-      return receipt.transactionHash;
+      console.log(`Complaint ${complaintId} added to blockchain. Tx hash: ${receipt.hash}`);
+      return receipt.hash;
     } catch (error) {
       console.error(`Error adding complaint to blockchain: ${error.message}`);
       throw error;
@@ -66,8 +67,8 @@ const blockchainService = {
       const tx = await contract.updateStatus(complaintId, newStatus);
       const receipt = await tx.wait();
       
-      console.log(`Status updated for complaint ${complaintId}. Tx hash: ${receipt.transactionHash}`);
-      return receipt.transactionHash;
+      console.log(`Status updated for complaint ${complaintId}. Tx hash: ${receipt.hash}`);
+      return receipt.hash;
     } catch (error) {
       console.error(`Error updating status on blockchain: ${error.message}`);
       throw error;
@@ -87,7 +88,7 @@ const blockchainService = {
       
       return {
         complaintId: result[0],
-        timestamp: new Date(result[1].toNumber() * 1000), // Convert from Unix timestamp
+        timestamp: new Date(Number(result[1]) * 1000), // Convert from Unix timestamp
         statusUpdates: result[2]
       };
     } catch (error) {
