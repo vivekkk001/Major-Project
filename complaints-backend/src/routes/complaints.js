@@ -1,74 +1,108 @@
 const express = require("express");
 const axios = require("axios");
+const path = require("path");
+const multer = require("multer");
+const sharp = require("sharp");
+const streamifier = require("streamifier");
+const cloudinary = require("cloudinary").v2;
 const pool = require("../config/db");
 const verifyToken = require("../middleware/auth");
+const reverseGeocode = require("../utils/reverseGeocode");
 const { sendDepartmentEmail, sendCitizenEmail } = require("../utils/sendEmail");
-const blockchainService = require("../utils/blockchainService"); // Import blockchain service
+const blockchainService = require("../utils/blockchainService");
 
+require("dotenv").config();
 const router = express.Router();
+const upload = multer({ storage: multer.memoryStorage() });
+
+// Cloudinary config
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 // 📌 Complaint Submission Route
-router.post("/", verifyToken, async (req, res) => {
+router.post("/", verifyToken, upload.single("image"), async (req, res) => {
   try {
-    const { description, latitude, longitude, image_url } = req.body;
+    const { description, latitude, longitude } = req.body;
     const citizen_name = req.user.name;
-    console.log("User Data from Token:", req.user);
 
-    // 🔹 Step 1: Call ML API to Get Department
-    const mlResponse = await axios.post("http://localhost:8000/predict", { description });
-    console.log("ML API Response:", mlResponse.data);
+    if (!req.file) {
+      return res.status(400).json({ message: "Image file is required" });
+    }
+
+    // 🔹 Step 1: ML Department classification
+    const mlResponse = await axios.post("http://127.0.0.1:8000/predict", { description });
     const department = mlResponse.data.department;
+    console.log("Step 1 - Department:", department);
 
-    // Step 0.5: Generate a unique, increment-only complaint_id
+    // 🔹 Step 2: Convert to .webp and upload to Cloudinary
+    const buffer = await sharp(req.file.buffer).webp().toBuffer();
+
+    const cloudinaryUpload = () => {
+      return new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          { folder: "complaints", format: "webp" },
+          (error, result) => {
+            if (error) return reject(error);
+            resolve(result.secure_url);
+          }
+        );
+        streamifier.createReadStream(buffer).pipe(uploadStream);
+      });
+    };
+
+    const image_url = await cloudinaryUpload();
+    console.log("Step 2 - Uploaded to Cloudinary:", image_url);
+
+    // 🔹 Step 3: Validate location
+    if (!latitude || !longitude) {
+      return res.status(400).json({ message: "Location access is required to submit the complaint" });
+    }
+
+    // 🔹 Step 4: Reverse Geocoding
+    const lat = parseFloat(latitude);
+    const lng = parseFloat(longitude);
+    const address = await reverseGeocode(lat, lng);
+    console.log("Step 4 - Geocoded Address:", address);
+
+    // 🔹 Step 5: Generate complaint_id
     const counterRes = await pool.query("SELECT last_used_id FROM complaint_counter WHERE id = 1");
     const newComplaintId = counterRes.rows[0].last_used_id + 1;
-
-    // Update the counter
     await pool.query("UPDATE complaint_counter SET last_used_id = $1 WHERE id = 1", [newComplaintId]);
 
-    // 🔹 Step 2: Insert Complaint into Database
+    // 🔹 Step 6: Insert complaint into DB
     const newComplaint = await pool.query(
       `INSERT INTO complaints 
-        (complaint_id, citizen_name, department, description, image_url, latitude, longitude)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+        (complaint_id, citizen_name, department, description, image_url, latitude, longitude, address)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
-      [
-        newComplaintId,
-        citizen_name,
-        department,
-        description,
-        image_url,
-        latitude,
-        longitude
-      ]
+      [newComplaintId, citizen_name, department, description, image_url, lat, lng, address]
     );
-    
-    // 🔹 Step 3: Record to Blockchain
-    try {
-      const complaintId = newComplaintId.toString();
-      const txHash = await blockchainService.addComplaint(complaintId);
 
-      // Store transaction hash in database (optional)
+    // 🔹 Step 7: Add complaint to blockchain
+    try {
+      const txHash = await blockchainService.addComplaint(newComplaintId.toString());
       await pool.query(
         "UPDATE complaints SET blockchain_tx_hash = $1 WHERE complaint_id = $2",
-        [txHash, complaintId]
+        [txHash, newComplaintId.toString()]
       );
-
-      console.log(`Complaint ${complaintId} recorded on blockchain. Tx: ${txHash}`);
+      console.log(`Blockchain Tx saved: ${txHash}`);
     } catch (blockchainError) {
-      // Log error but don't fail the request if blockchain recording fails
       console.error("Blockchain recording error:", blockchainError);
     }
 
-    // 🔹 Step 4: Send Email to the Respective Department
+    // 🔹 Step 8: Send email to department
     await sendDepartmentEmail(newComplaint.rows[0]);
 
     res.status(201).json({
       message: "Complaint submitted successfully",
       complaint: newComplaint.rows[0],
     });
+
   } catch (error) {
-    console.error("Error submitting complaint:", error);
+    console.error(" Error submitting complaint:", error);
     res.status(500).json({ message: "Internal Server Error", error: error.message });
   }
 });

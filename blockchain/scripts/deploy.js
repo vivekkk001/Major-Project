@@ -29,9 +29,9 @@ async function main() {
     }
 
     fs.writeFileSync(envPath, envContent);
-    console.log(`✅ Updated ${envVar} in ${envPath}`);
+    console.log(` Updated ${envVar} in ${envPath}`);
   } catch (err) {
-    console.error("❌ Failed to update .env file:", err.message);
+    console.error(" Failed to update .env file:", err.message);
   }
 }
 

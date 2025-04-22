@@ -30,14 +30,14 @@ async function sendDepartmentEmail(complaint) {
     from: process.env.EMAIL_USER,
     to: recipientEmail,
     subject: `New Complaint Assigned - ${complaint.department}`,
-    text: `Complaint ID: ${complaint.complaint_id}\nCitizen: ${complaint.citizen_name}\nDescription: ${complaint.description}\nLocation: ${complaint.latitude}, ${complaint.longitude}\n\nPlease take necessary action.`,
+    text: `Complaint ID: ${complaint.complaint_id}\nCitizen: ${complaint.citizen_name}\nDescription: ${complaint.description}\nLocation: ${complaint.address}\nView Location: https://www.google.com/maps/search/?api=1&query=${complaint.latitude},${complaint.longitude}\n\nPlease take necessary action.`,
   };
 
   try {
     await transporter.sendMail(mailOptions);
-    console.log(`📩 Email sent to department: ${recipientEmail}`);
+    console.log(` Email sent to department: ${recipientEmail}`);
   } catch (error) {
-    console.error("❌ Error sending department email:", error);
+    console.error(" Error sending department email:", error);
   }
 }
 
@@ -45,16 +45,16 @@ async function sendDepartmentEmail(complaint) {
 async function sendCitizenEmail(complaintId, newStatus) {
   try {
     const result = await pool.query(
-      "SELECT citizen_email, citizen_name, description, latitude, longitude FROM complaints WHERE complaint_id = $1",
+      "SELECT citizen_email, citizen_name, description, latitude, longitude, address FROM complaints WHERE complaint_id = $1",
       [complaintId]
     );
 
     if (result.rows.length === 0) {
-      console.error("❌ Complaint not found");
+      console.error(" Complaint not found");
       return;
     }
 
-    const { citizen_email, citizen_name, description, latitude, longitude } = result.rows[0];
+    const { citizen_email, citizen_name, description, latitude, longitude, address } = result.rows[0];
     
     let subject, message;
     if (newStatus === "In Progress") {
@@ -66,9 +66,9 @@ async function sendCitizenEmail(complaintId, newStatus) {
     }
 
     await transporter.sendMail({ from: process.env.EMAIL_USER, to: citizen_email, subject, text: message });
-    console.log(`📩 Email sent to citizen: ${citizen_email}`);
+    console.log(` Email sent to citizen: ${citizen_email}`);
   } catch (error) {
-    console.error("❌ Error sending email to citizen:", error);
+    console.error(" Error sending email to citizen:", error);
   }
 }
 
