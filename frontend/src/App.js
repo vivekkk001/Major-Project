@@ -3,8 +3,6 @@ import axios from "axios";
 import { BrowserRouter as Router, Route, Routes, Link, useNavigate } from "react-router-dom";
 
 const API = "http://localhost:5000";
-// const API = "http://192.168.137.1:5000"; // NOT localhost
-
 
 const Login = () => {
   const [email, setEmail] = useState("");
