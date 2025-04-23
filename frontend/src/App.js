@@ -12,13 +12,18 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post(`${API}/api/citizen/login`, { email, password });
-      localStorage.setItem("token", res.data.token);
+      await axios.post(`${API}/api/citizen/login`, { email, password }, {
+        withCredentials: true,
+      });
+  
       navigate("/complaints");
     } catch (err) {
+      console.error("Login failed", err);
       alert("Login failed");
     }
   };
+  
+  
 
   return (
     <div style={{ padding: 20 }}>
@@ -87,28 +92,28 @@ const ComplaintForm = () => {
     if (!description || !image || !location.lat || !location.lng) {
       return alert("All fields are required including location");
     }
-
+  
     const formData = new FormData();
     formData.append("description", description);
     formData.append("image", image);
     formData.append("latitude", location.lat);
     formData.append("longitude", location.lng);
-
+  
     try {
-      const token = localStorage.getItem("token");
-      const response = await axios.post(`${API}/api/complaints`, formData, {
+      const response = await axios.post(`${API}/api/complaints/`, formData, {
+        withCredentials: true,
         headers: {
-          "Authorization": `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
         },
       });
-
+  
       setMessage(response.data.message);
     } catch (error) {
       console.error(error);
       setMessage("Submission failed");
     }
   };
+  
 
   return (
     <div style={{ padding: "2rem", maxWidth: "600px", margin: "auto" }}>
@@ -144,9 +149,8 @@ const MyComplaints = () => {
   useEffect(() => {
     const fetchComplaints = async () => {
       try {
-        const token = localStorage.getItem("token");
         const res = await axios.get(`${API}/api/complaints/my-complaints`, {
-          headers: { Authorization: `Bearer ${token}` },
+          withCredentials: true,
         });
         setComplaints(res.data);
       } catch (err) {
