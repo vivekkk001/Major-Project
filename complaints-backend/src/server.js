@@ -10,7 +10,7 @@ const app = express();
 // Middlewares
 app.use(cookieParser());
 app.use(cors({
-  origin: ["http://localhost:3000"], // Frontend origin
+  origin: [process.env.FRONTEND_URL], // Frontend origin
   credentials: true
 }));
 app.use(express.json());
@@ -35,6 +35,6 @@ pool.query("SELECT NOW()", (err, res) => {
     console.log(" Database connected at:", res.rows[0].now);
 
     const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => console.log(` Server running on http://localhost:${PORT}`));
+    app.listen(PORT, () => console.log(` Server running on ${process.env.CLIENT_ORIGIN?.replace(/3000$/, PORT) || "http://localhost:" + PORT}`));
   }
 });

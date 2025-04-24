@@ -33,7 +33,7 @@ router.post("/", verifyToken, upload.single("image"), async (req, res) => {
     }
 
     // 🔹 Step 1: ML Department classification
-    const mlResponse = await axios.post("http://127.0.0.1:8000/predict", { description });
+    const mlResponse = await axios.post(process.env.ML_MODEL_API_URL, { description });
     const department = mlResponse.data.department;
     console.log("Step 1 - Department:", department);
 
