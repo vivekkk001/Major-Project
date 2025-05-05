@@ -1,43 +1,38 @@
-body {
-  margin: 0;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: #f2f2f2;
-}
-
-.auth-container, .home-container, .complaints-container {
-  max-width: 400px;
-  margin: 50px auto;
-  background: white;
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+.App {
   text-align: center;
 }
 
-.auth-container input, .auth-container button, .home-container button {
-  width: 100%;
-  padding: 12px;
-  margin: 10px 0;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  font-size: 16px;
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
 }
 
-button {
-  background-color: #007bff;
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
   color: white;
-  border: none;
-  cursor: pointer;
-  transition: background 0.3s;
 }
 
-button:hover {
-  background-color: #0056b3;
+.App-link {
+  color: #61dafb;
 }
 
-@media (max-width: 500px) {
-  .auth-container, .home-container, .complaints-container {
-    margin: 20px;
-    padding: 20px;
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
   }
 }
