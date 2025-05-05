@@ -5,7 +5,7 @@ A **user-friendly, feature-rich web application** designed to streamline municip
 ---
 
 ##  **Features**
-- **AI-Based Complaint Classification** – Automatically categorizes complaints into relevant municipal departments using ML.  
+- **ML-Based Complaint Classification** – Automatically categorizes complaints into relevant municipal departments using Naïve Bayes Model. 
 - **Image Verification with Vision API** – Ensures submitted images align with complaint descriptions before processing.  
 - **Real-Time Status Updates** – Citizens receive instant notifications as complaints progress.  
 - **Blockchain-Backed Integrity** – Prevents data tampering by securely recording complaint status changes.  
