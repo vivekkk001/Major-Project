@@ -4,13 +4,13 @@ const pool = require("../config/db");
 
 // Department email mapping
 const departmentEmails = {
-  "Road Maintenance": "vivekkulal905@gmail.com",
-  "Water Supply": "vivekkulal905@gmail.com",
-  "Sanitation": "vivekkulal905@gmail.com",
-  "Sewage": "vivekkulal905@gmail.com",
-  "Parks and Recreation": "vivekkulal905@gmail.com",
-  "Public Transportation": "vivekkulal905@gmail.com",
-  "Electrical Department": "vivekkulal905@gmail.com",
+  "Road Maintenance": "infrastructure@smartcivic.tech",
+  "Water Supply": "utilities@smartcivic.tech",
+  "Sanitation": "parks.environment@smartcivic.tech, utilities@smartcivic.tech",
+  "Sewage": "utilities@smartcivic.tech",
+  "Parks and Recreation": "parks.environment@smartcivic.tech",
+  "Public Transportation": "infrastructure@smartcivic.tech",
+  "Electrical Department": "infrastructure@smartcivic.tech",
 };
 
 // Email transporter setup
@@ -29,8 +29,9 @@ async function sendDepartmentEmail(complaint) {
   let mailOptions = {
     from: process.env.EMAIL_USER,
     to: recipientEmail,
+    cc: "admin@smartcivic.tech",
     subject: `New Complaint Assigned - ${complaint.department}`,
-    text: `Complaint ID: ${complaint.complaint_id}\nCitizen: ${complaint.citizen_name}\nDescription: ${complaint.description}\nLocation: ${complaint.address}\nView Location: https://www.google.com/maps/search/?api=1&query=${complaint.latitude},${complaint.longitude}\n\nPlease take necessary action.`,
+    text: `Complaint ID: ${complaint.complaint_id}\nCitizen: ${complaint.citizen_name}\nDescription: ${complaint.description}\nLocation: ${complaint.address}\nView Location: https://www.google.com/maps/search/?api=1&query=${complaint.latitude},${complaint.longitude}\n\n Please take necessary action.`,
   };
 
   try {
