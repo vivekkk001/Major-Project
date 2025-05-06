@@ -2,7 +2,7 @@
 const { ethers } = require("ethers");
 const fs = require("fs");
 const path = require("path");
-
+require("dotenv").config();
 // Read contract ABI from the artifact file
 const getContractABI = () => {
   try {
