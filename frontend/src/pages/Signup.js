@@ -19,11 +19,7 @@ const Signup = () => {
   const handleSignup = async e => {
     e.preventDefault();
     try {
-<<<<<<< Updated upstream
-      await axios.post(`${API}/api/citizen/register`, formData);
-=======
       await axios.post(`${API}/api/citizen/signup`, formData);
->>>>>>> Stashed changes
       navigate("/");
     } catch (err) {
       alert("Signup failed");
