@@ -22,6 +22,10 @@ const citizenRoutes = require("./routes/citizen");
 const officialRoutes = require("./routes/official");
 const complaintsRoutes = require("./routes/complaints");
 
+const adminRoutes = require("./routes/admin");
+app.use("/api/admin", adminRoutes);
+
+app.use("/api/official", require("./routes/official"));
 app.use("/api/citizen", citizenRoutes);
 app.use("/api/official", officialRoutes);
 app.use("/api/complaints", complaintsRoutes); 

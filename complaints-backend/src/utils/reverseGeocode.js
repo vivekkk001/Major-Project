@@ -23,6 +23,6 @@ module.exports = reverseGeocode;
 // ✅ Test block – run this file directly: node utils/reverseGeocode.js
 if (require.main === module) {
   reverseGeocode(12.9716, 77.5946)
-    .then(address => console.log("🧭 Reverse geocoded address:", address))
-    .catch(err => console.error("❌ Error:", err.message));
+    .then(address => console.log("Reverse geocoded address:", address))
+    .catch(err => console.error("Error:", err.message));
 }

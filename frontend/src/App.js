@@ -7,11 +7,11 @@ import Signup from "./pages/Signup";
 import ComplaintForm from "./pages/ComplaintForm";
 import MyComplaints from "./pages/MyComplaints";
 import Home from "./pages/Home";
-import OfficialLogin from "./pages/OfficialLogin";
-import AdminLogin from "./pages/AdminLogin";
-import OfficialDashboard from "./pages/OfficialDashboard";
-import AdminDashboard from "./pages/AdminDashboard";
-
+import OfficialLogin from "./pages/official/OfficialLogin";
+import OfficialDashboard from "./pages/official/OfficialDashboard";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import UserManagement from "./pages/admin/UserManagement";
+import DepartmentManagement from "./pages/admin/DepartmentManagement";
 
 const App = () => {
   return (
@@ -28,8 +28,9 @@ const App = () => {
             <Route path="/official-login" element={<OfficialLogin />} />
             <Route path="/official-dashboard" element={<OfficialDashboard />} />
             <Route path="/official/dashboard" element={<OfficialDashboard />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin-login" element={<AdminLogin />} />
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/users" element={<UserManagement />} />
+            <Route path="/admin/departments" element={<DepartmentManagement />} />
           </Routes>
         </main>
         <Footer />
