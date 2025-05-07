@@ -123,8 +123,41 @@ router.post("/", verifyToken, upload.single("image"), async (req, res) => {
     res.status(500).json({ message: "Internal Server Error", error: error.message });
   }
 });
+// official dashboard Data of citizen
+router.get('/all', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM complaints ORDER BY complaint_id DESC');
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
 
-// 📌 Complaint Status Update Route (Only for Officials)
+//Update the database when we change the status in the official dashboard
+router.put("/:id/status", async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  try {
+    const result = await pool.query(
+      "UPDATE complaints SET status = $1 WHERE complaint_id = $2 RETURNING *",
+      [status, id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: "Complaint not found" });
+    }
+
+    res.json({ message: "Status updated", complaint: result.rows[0] });
+  } catch (err) {
+    console.error("Error updating status:", err.message);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
+// Complaint Status Update Route (Only for Officials)
 router.put("/update-status", verifyToken, async (req, res) => {
   try {
     const { complaintId, newStatus } = req.body;
@@ -175,7 +208,7 @@ router.put("/update-status", verifyToken, async (req, res) => {
   }
 });
 
-// 📌 Get complaints for logged-in citizen
+//  Get complaints for logged-in citizen
 router.get("/my-complaints", verifyToken, async (req, res) => {
   try {
     const citizenName = req.user.name;
@@ -192,7 +225,7 @@ router.get("/my-complaints", verifyToken, async (req, res) => {
   }
 });
 
-// 📌 Get all complaints (for officials only)
+// Get all complaints (for officials only)
 router.get("/all", verifyToken, async (req, res) => {
   try {
     // Check if user is an official
@@ -222,7 +255,7 @@ router.get("/all", verifyToken, async (req, res) => {
   }
 });
 
-// 📌 New route: Verify complaint on blockchain
+// New route: Verify complaint on blockchain
 router.get("/verify/:id", verifyToken, async (req, res) => {
   try {
     const complaintId = req.params.id;
