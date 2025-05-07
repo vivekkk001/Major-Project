@@ -23,7 +23,7 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// 🔍 Utility to check image blur using Laplacian variance
+// 🔍 Utility to check image blur using Laplacian varianc
 // function isImageBlurred(buffer, threshold = 100) {
 //   const image = cv.imdecode(buffer); // Decode buffer into Mat
 //   const gray = image.bgrToGray(); // Convert to grayscale
