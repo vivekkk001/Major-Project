@@ -5,7 +5,6 @@ import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 # Load dataset
-df = pd.read_csv("D:/Major-Project/ml-service/municipal_issues_modified.csv")
 
 # Preprocessing function
 def preprocess_text(text):
