@@ -1,0 +1,149 @@
+import React, { useState } from 'react';
+import { Search, Filter, FileText, Plus } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
+import ComplaintCard from '../components/ComplaintCard';
+
+const MyComplaints: React.FC = () => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+
+  // Empty complaints array (dummy complaints removed)
+  const complaints: any[] = [];
+
+  const filteredComplaints = complaints.filter(complaint => {
+    const matchesSearch = complaint.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         complaint.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || complaint.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      <Navbar />
+      
+      {/* Background Effects */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="blob absolute top-20 left-10 w-72 h-72 bg-gradient-to-r from-teal-400/10 to-cyan-400/10 rounded-full morph"></div>
+        <div className="blob absolute bottom-20 right-10 w-96 h-96 bg-gradient-to-r from-blue-400/5 to-purple-400/5 rounded-full morph"></div>
+      </div>
+
+      <div className="relative pt-24 pb-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-12">
+            <div>
+              <h1 className="text-4xl font-bold text-white mb-4">My Complaints</h1>
+              <p className="text-gray-400 text-lg">
+                Track and manage all your submitted complaints
+              </p>
+            </div>
+            <Link 
+              to="/complaint"
+              className="mt-6 lg:mt-0 glass glow px-6 py-3 rounded-lg text-teal-400 hover:bg-teal-400 hover:text-white transition-all hover-lift ripple flex items-center space-x-2"
+            >
+              <Plus className="h-5 w-5" />
+              <span>New Complaint</span>
+            </Link>
+          </div>
+
+          {/* Search and Filters */}
+          <div className="glass rounded-xl p-6 mb-8">
+            <div className="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6">
+              {/* Search */}
+              <div className="flex-1 relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Search className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Search complaints..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="glass-dark w-full pl-10 pr-4 py-3 rounded-lg border border-gray-600 focus:border-teal-400 focus:outline-none transition-colors text-white placeholder-gray-400"
+                />
+              </div>
+
+              {/* Status Filter */}
+              <div className="flex items-center space-x-2">
+                <Filter className="h-5 w-5 text-gray-400" />
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="glass-dark px-4 py-3 rounded-lg border border-gray-600 focus:border-teal-400 focus:outline-none transition-colors text-white"
+                >
+                  <option value="all" className="bg-slate-800">All Status</option>
+                  <option value="pending" className="bg-slate-800">Pending</option>
+                  <option value="in-progress" className="bg-slate-800">In Progress</option>
+                  <option value="resolved" className="bg-slate-800">Resolved</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div className="glass rounded-lg p-6 text-center hover-lift">
+              <div className="text-2xl font-bold text-white mb-1">
+                {complaints.length}
+              </div>
+              <div className="text-gray-400 text-sm">Total Complaints</div>
+            </div>
+            <div className="glass rounded-lg p-6 text-center hover-lift">
+              <div className="text-2xl font-bold text-yellow-400 mb-1">
+                {complaints.filter(c => c.status === 'pending').length}
+              </div>
+              <div className="text-gray-400 text-sm">Pending</div>
+            </div>
+            <div className="glass rounded-lg p-6 text-center hover-lift">
+              <div className="text-2xl font-bold text-blue-400 mb-1">
+                {complaints.filter(c => c.status === 'in-progress').length}
+              </div>
+              <div className="text-gray-400 text-sm">In Progress</div>
+            </div>
+            <div className="glass rounded-lg p-6 text-center hover-lift">
+              <div className="text-2xl font-bold text-green-400 mb-1">
+                {complaints.filter(c => c.status === 'resolved').length}
+              </div>
+              <div className="text-gray-400 text-sm">Resolved</div>
+            </div>
+          </div>
+
+          {/* Complaints List */}
+          <div className="space-y-6">
+            {filteredComplaints.length > 0 ? (
+              filteredComplaints.map((complaint) => (
+                <ComplaintCard key={complaint.id} {...complaint} />
+              ))
+            ) : (
+              <div className="glass rounded-xl p-12 text-center">
+                <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-white mb-2">No complaints found</h3>
+                <p className="text-gray-400 mb-6">
+                  {searchTerm || statusFilter !== 'all' 
+                    ? 'Try adjusting your search or filter criteria'
+                    : "You haven't submitted any complaints yet"
+                  }
+                </p>
+                {!searchTerm && statusFilter === 'all' && (
+                  <Link 
+                    to="/complaint"
+                    className="inline-flex items-center space-x-2 glass glow px-6 py-3 rounded-lg text-teal-400 hover:bg-teal-400 hover:text-white transition-all hover-lift ripple"
+                  >
+                    <Plus className="h-5 w-5" />
+                    <span>File Your First Complaint</span>
+                  </Link>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <Footer />
+    </div>
+  );
+};
+
+export default MyComplaints;
