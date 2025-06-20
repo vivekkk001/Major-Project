@@ -158,9 +158,10 @@ const Login: React.FC = () => {
                 <Link to="/official/login" className="text-xs text-teal-400 hover:text-teal-300 transition-colors">
                   Department Login
                 </Link>
-                <Link to="/admin/dashboard" className="text-xs text-teal-400 hover:text-teal-300 transition-colors">
-                  Admin Access
+                <Link to="/admin/login" className="text-xs text-teal-400 hover:text-teal-300 transition-colors">
+                  Admin Login
                 </Link>
+
               </div>
             </div>
           </div>

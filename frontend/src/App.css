@@ -1,38 +1,179 @@
-.App {
-  text-align: center;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Ripple Effect */
+.ripple {
+  position: relative;
+  overflow: hidden;
+}
+.ripple::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  transform: scale(0);
+  animation: ripple 0.6s linear;
+  background-color: rgba(255, 255, 255, 0.3);
+}
+.ripple:active::after {
+  width: 100px;
+  height: 100px;
+  top: 50%;
+  left: 50%;
+  margin-top: -50px;
+  margin-left: -50px;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-}
-
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
+@keyframes ripple {
   to {
-    transform: rotate(360deg);
+    transform: scale(4);
+    opacity: 0;
   }
+}
+
+/* Floating Animation */
+.float {
+  animation: float 4s ease-in-out infinite;
+}
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Hover Lift */
+.hover-lift {
+  transition: transform 0.3s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-5px);
+}
+
+/* Glass Effect */
+.glass {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.glass-dark {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px);
+}
+
+/* Glowing effect */
+.glow {
+  box-shadow: 0 0 8px rgba(0, 255, 255, 0.2), 0 0 16px rgba(0, 255, 255, 0.1);
+}
+
+/* Gradient Text */
+.gradient-text {
+  background: linear-gradient(to right, #14b8a6, #06b6d4, #3b82f6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Morphing blob animation */
+.blob {
+  animation: morph 10s ease-in-out infinite alternate;
+}
+@keyframes morph {
+  0% {
+    border-radius: 42% 58% 31% 69% / 40% 31% 69% 60%;
+  }
+  100% {
+    border-radius: 68% 32% 70% 30% / 50% 60% 40% 50%;
+  }
+}
+
+/* Particle animation */
+.particle {
+  position: absolute;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  animation: particle-float linear infinite;
+}
+@keyframes particle-float {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-100vh);
+  }
+}
+
+/* Card Flip In Animation */
+@keyframes cardFlipIn {
+  0% {
+    opacity: 0;
+    transform: rotateY(90deg) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: rotateY(0deg) scale(1);
+  }
+}
+.animate-cardFlipIn {
+  animation: cardFlipIn 0.8s ease-out forwards;
+}
+
+/* Enhanced 3D Carousel Styles */
+.carousel-3d {
+  perspective: 1200px;
+  perspective-origin: center center;
+}
+
+.carousel-card {
+  transform-style: preserve-3d;
+  transition: all 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  backface-visibility: hidden;
+}
+
+.carousel-card.active {
+  transform: translateZ(0) scale(1);
+  opacity: 1;
+  z-index: 30;
+}
+
+.carousel-card.prev {
+  transform: translateX(-120px) rotateY(25deg) scale(0.85);
+  opacity: 0.7;
+  z-index: 20;
+}
+
+.carousel-card.next {
+  transform: translateX(120px) rotateY(-25deg) scale(0.85);
+  opacity: 0.7;
+  z-index: 20;
+}
+
+.carousel-card.hidden {
+  transform: scale(0.6);
+  opacity: 0.3;
+  z-index: 10;
+}
+
+/* Enhanced Glass Effect for Carousel */
+.carousel-glass {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* Smooth Indicator Animation */
+.indicator-dot {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.indicator-dot.active {
+  background: linear-gradient(45deg, #14b8a6, #06b6d4);
+  box-shadow: 0 0 12px rgba(20, 184, 166, 0.6);
 }

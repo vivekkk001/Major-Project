@@ -29,9 +29,12 @@ const OfficialDashboard: React.FC = () => {
   }, [token, department]);
 
   const handleChange = (id: string, field: 'status' | 'description' | 'address', value: string) => {
-    if (field === 'status') setEditedStatuses(prev => ({ ...prev, [id]: value }));
-    if (field === 'description') setEditedDescriptions(prev => ({ ...prev, [id]: value }));
-    if (field === 'address') setEditedAddresses(prev => ({ ...prev, [id]: value }));
+    type FieldMap = { [id: string]: string };
+
+    const [editedStatuses, setEditedStatuses] = useState<FieldMap>({});
+    const [editedDescriptions, setEditedDescriptions] = useState<FieldMap>({});
+    const [editedAddresses, setEditedAddresses] = useState<FieldMap>({});
+
   };
 
   const handleSave = async (id: string, field: 'status' | 'description' | 'address') => {
@@ -44,9 +47,12 @@ const OfficialDashboard: React.FC = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setComplaints(prev => prev.map(c => (c.complaint_id === id ? { ...c, [field]: value } : c)));
-      if (field === 'status') setEditedStatuses(prev => { const p = { ...prev }; delete p[id]; return p; });
-      if (field === 'description') setEditedDescriptions(prev => { const p = { ...prev }; delete p[id]; return p; });
-      if (field === 'address') setEditedAddresses(prev => { const p = { ...prev }; delete p[id]; return p; });
+      type FieldMap = { [id: string]: string };
+
+      const [editedStatuses, setEditedStatuses] = useState<FieldMap>({});
+      const [editedDescriptions, setEditedDescriptions] = useState<FieldMap>({});
+      const [editedAddresses, setEditedAddresses] = useState<FieldMap>({});
+
       alert(`${field} updated successfully!`);
     } catch (err) {
       console.error(`Error updating ${field}:`, err);

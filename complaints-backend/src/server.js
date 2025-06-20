@@ -34,7 +34,7 @@ pool.query("SELECT NOW()", (err, res) => {
     console.log("DB connected:", res.rows[0].now);
     const PORT = process.env.PORT || 5000;
     app.listen(PORT, () =>
-      console.log(` Server running at http://localhost:${PORT}`)
+      console.log(`Server running at http://localhost:${PORT}`)
     );
   }
 });

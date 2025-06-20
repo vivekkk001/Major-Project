@@ -13,6 +13,7 @@ import MyComplaints from './pages/MyComplaints';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import DepartmentManagement from './pages/admin/DepartmentManagement';
 import UserManagement from './pages/admin/UserManagement';
+import AdminLogin from './pages/admin/AdminLogin';
 
 // Official Pages
 import OfficialDashboard from './pages/official/OfficialDashboard';
@@ -37,6 +38,7 @@ function App() {
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/departments" element={<DepartmentManagement />} />
           <Route path="/admin/users" element={<UserManagement />} />
+          <Route path="/admin/login" element={<AdminLogin />} />
 
           {/* Official */}
           <Route path="/official/dashboard" element={<OfficialDashboard />} />
