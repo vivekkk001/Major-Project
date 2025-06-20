@@ -4,40 +4,54 @@ import { Building2, Lock, Eye, EyeOff, Shield, User } from 'lucide-react';
 import axios from 'axios';
 import Navbar from '../../components/Navbar';
 
+interface Department {
+  id: number;
+  name: string;
+}
+
 const OfficialLogin: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    departmentId: '',
-    officialid: '',
+    department: '',
+    official_id: '',
     password: ''
   });
-  const [departments, setDepartments] = useState<any[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const navigate = useNavigate();
 
-  // Predefined departments as fallback
-  const defaultDepartments = [
-    'Parks and Recreation',
-    'Road Maintenance',
-    'Public Transportation',
-    'Sewage',
-    'Electrical Department',
-    'Sanitation',
-    'Water Supply'
+  const fallbackDepartments: Department[] = [
+    { id: 1, name: 'Parks and Recreation' },
+    { id: 2, name: 'Road Maintenance' },
+    { id: 3, name: 'Public Transportation' },
+    { id: 4, name: 'Sewage' },
+    { id: 5, name: 'Electrical Department' },
+    { id: 6, name: 'Sanitation' },
+    { id: 7, name: 'Water Supply' }
   ];
 
   useEffect(() => {
-    // Fetch available departments from the server
     const fetchDepartments = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/departments");
-        setDepartments(res.data);
+        const res = await axios.get('http://localhost:5000/api/departments');
+        const data = res.data;
+
+        if (Array.isArray(data)) {
+          if (typeof data[0] === 'string') {
+            // If backend returns array of strings
+            setDepartments(data.map((name, idx) => ({ id: idx, name })));
+          } else {
+            setDepartments(data);
+          }
+        } else {
+          setDepartments(fallbackDepartments);
+        }
       } catch (err) {
-        console.error("Error fetching departments:", err);
-        // Use default departments if API fails
-        setDepartments(defaultDepartments.map(dept => ({ name: dept })));
+        console.error('Failed to fetch departments:', err);
+        setDepartments(fallbackDepartments);
       }
     };
+
     fetchDepartments();
   }, []);
 
@@ -54,24 +68,18 @@ const OfficialLogin: React.FC = () => {
 
     try {
       const res = await axios.post("http://localhost:5000/api/official/login", {
-        official_id: formData.officialid,
+        official_id: formData.official_id,
         password: formData.password,
-        department: formData.departmentId,
+        department: formData.department
       });
 
-      // Store token and department in local storage
       localStorage.setItem("token", res.data.token);
-      localStorage.setItem("department", formData.departmentId);
-
-      // Show success message
+      localStorage.setItem("department", formData.department);
       alert(res.data.message || "Login successful!");
-      
-      // Navigate to dashboard
       navigate("/official/dashboard");
     } catch (err: any) {
       console.error("Login error:", err);
-      const errorMessage = err.response?.data?.message || "Login failed. Please check your credentials.";
-      alert(errorMessage);
+      alert(err.response?.data?.message || "Login failed. Please check your credentials.");
     } finally {
       setLoading(false);
     }
@@ -81,12 +89,13 @@ const OfficialLogin: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       <Navbar />
 
-      {/* Background Effects */}
+      {/* Blurred Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="blob absolute top-20 left-10 w-72 h-72 bg-gradient-to-r from-teal-400/10 to-cyan-400/10 rounded-full morph"></div>
         <div className="blob absolute bottom-20 right-10 w-96 h-96 bg-gradient-to-r from-blue-400/5 to-purple-400/5 rounded-full morph"></div>
       </div>
 
+      {/* Login Card */}
       <div className="relative flex items-center justify-center min-h-screen px-4 py-20">
         <div className="w-full max-w-md">
           {/* Header */}
@@ -99,30 +108,28 @@ const OfficialLogin: React.FC = () => {
             <p className="text-gray-400">Official login for department personnel</p>
           </div>
 
-          {/* Login Form */}
+          {/* Form */}
           <div className="glass rounded-2xl p-8 hover-lift">
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Department Selection */}
+              {/* Department */}
               <div>
-                <label htmlFor="departmentId" className="block text-sm font-medium text-gray-300 mb-2">
-                  Department
-                </label>
+                <label htmlFor="department" className="block text-sm font-medium text-gray-300 mb-2">Department</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <Building2 className="h-5 w-5 text-gray-400" />
                   </div>
                   <select
-                    id="departmentId"
-                    name="departmentId"
-                    value={formData.departmentId}
+                    id="department"
+                    name="department"
+                    value={formData.department}
                     onChange={handleInputChange}
                     className="glass-dark w-full pl-10 pr-4 py-3 rounded-lg border border-gray-600 focus:border-orange-400 focus:outline-none transition-colors text-white"
                     required
                     disabled={loading}
                   >
-                    <option value="" className="bg-slate-800">Select your department</option>
-                    {departments.map((dept, index) => (
-                      <option key={dept.id || index} value={dept.name} className="bg-slate-800">
+                    <option value="">Select your department</option>
+                    {departments.map((dept) => (
+                      <option key={dept.id} value={dept.name} className="bg-slate-800">
                         {dept.name}
                       </option>
                     ))}
@@ -132,18 +139,16 @@ const OfficialLogin: React.FC = () => {
 
               {/* Official ID */}
               <div>
-                <label htmlFor="officialid" className="block text-sm font-medium text-gray-300 mb-2">
-                  Official ID
-                </label>
+                <label htmlFor="official_id" className="block text-sm font-medium text-gray-300 mb-2">Official ID</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <User className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
                     type="text"
-                    id="officialid"
-                    name="officialid"
-                    value={formData.officialid}
+                    id="official_id"
+                    name="official_id"
+                    value={formData.official_id}
                     onChange={handleInputChange}
                     className="glass-dark w-full pl-10 pr-4 py-3 rounded-lg border border-gray-600 focus:border-orange-400 focus:outline-none transition-colors text-white placeholder-gray-400"
                     placeholder="Enter your Official ID"
@@ -153,11 +158,9 @@ const OfficialLogin: React.FC = () => {
                 </div>
               </div>
 
-              {/* Password Input */}
+              {/* Password */}
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
-                  Password
-                </label>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">Password</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <Lock className="h-5 w-5 text-gray-400" />
@@ -188,7 +191,7 @@ const OfficialLogin: React.FC = () => {
                 </div>
               </div>
 
-              {/* Submit Button */}
+              {/* Submit */}
               <button
                 type="submit"
                 disabled={loading}
@@ -212,7 +215,7 @@ const OfficialLogin: React.FC = () => {
               </div>
             </div>
 
-            {/* Back to Public Login */}
+            {/* Link to Citizen Login */}
             <div className="mt-6 pt-6 border-t border-gray-700">
               <p className="text-center text-gray-400 text-sm">
                 Not a department official?{' '}
