@@ -1,6 +1,6 @@
 const bcrypt = require("bcrypt");
 
-const password = "test123"; // Change this if needed
+const password = "123"; // Change this if needed
 
 bcrypt.hash(password, 10).then((hashedPassword) => {
     console.log("Generated Hash:", hashedPassword);

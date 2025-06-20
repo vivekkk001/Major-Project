@@ -23,7 +23,7 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// 🔍 Utility to check image blur using Laplacian varianc
+// 🔍 Utility to check image blur using Laplacian variance
 // function isImageBlurred(buffer, threshold = 100) {
 //   const image = cv.imdecode(buffer); // Decode buffer into Mat
 //   const gray = image.bgrToGray(); // Convert to grayscale
@@ -48,7 +48,7 @@ router.post("/", verifyToken, upload.single("image"), async (req, res) => {
     //     message: "Image is too blurry. Please retake the photo or upload a clearer one.",
     //   });
     // }
-
+ 
     // 🔹 Step 1: ML Department classification
     const mlResponse = await axios.post(process.env.ML_MODEL_API_URL, { description });
     const department = mlResponse.data.department;
@@ -134,7 +134,7 @@ router.get('/all', async (req, res) => {
   }
 });
 
-//Update the database when we change the status in the official dashboard
+// Update the status of a complaint
 router.put("/:id/status", async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
@@ -156,6 +156,72 @@ router.put("/:id/status", async (req, res) => {
   }
 });
 
+// Update the description of a complaint
+router.put("/:id/description", async (req, res) => {
+  const { id } = req.params;
+  const { description } = req.body;
+
+  try {
+    const result = await pool.query(
+      "UPDATE complaints SET description = $1 WHERE complaint_id = $2 RETURNING *",
+      [description, id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: "Complaint not found" });
+    }
+
+    res.json({ message: "Description updated", complaint: result.rows[0] });
+  } catch (err) {
+    console.error("Error updating description:", err.message);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Update the address of a complaint
+router.put("/:id/address", async (req, res) => {
+  const { id } = req.params;
+  const { address } = req.body;
+
+  try {
+    const result = await pool.query(
+      "UPDATE complaints SET address = $1 WHERE complaint_id = $2 RETURNING *",
+      [address, id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: "Complaint not found" });
+    }
+
+    res.json({ message: "Address updated", complaint: result.rows[0] });
+  } catch (err) {
+    console.error("Error updating address:", err.message);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Get complaints for logged-in officials by department
+router.get("/all", verifyToken, async (req, res) => {
+  try {
+    // Ensure the user is an official
+    if (req.user.role !== "official") {
+      return res.status(403).json({ message: "Unauthorized: Only officials can view complaints" });
+    }
+
+    const department = req.user.department;
+
+    // Fetch complaints for the logged-in official's department only
+    const complaints = await pool.query(
+      "SELECT * FROM complaints WHERE department = $1 ORDER BY created_at DESC",
+      [department]
+    );
+
+    res.json(complaints.rows);
+  } catch (error) {
+    console.error("Error fetching complaints:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
 
 // Complaint Status Update Route (Only for Officials)
 router.put("/update-status", verifyToken, async (req, res) => {
