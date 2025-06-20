@@ -1,29 +1,22 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Building2, Lock, Eye, EyeOff, Shield, User } from 'lucide-react';
+import axios from 'axios';
 import Navbar from '../../components/Navbar';
 
 const OfficialLogin: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     departmentId: '',
     officialid: '',
     password: ''
   });
+  const [departments, setDepartments] = useState<any[]>([]);
+  const navigate = useNavigate();
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Official login attempt:', formData);
-  };
-
-  const departments = [
+  // Predefined departments as fallback
+  const defaultDepartments = [
     'Parks and Recreation',
     'Road Maintenance',
     'Public Transportation',
@@ -32,6 +25,57 @@ const OfficialLogin: React.FC = () => {
     'Sanitation',
     'Water Supply'
   ];
+
+  useEffect(() => {
+    // Fetch available departments from the server
+    const fetchDepartments = async () => {
+      try {
+        const res = await axios.get("http://localhost:5000/api/departments");
+        setDepartments(res.data);
+      } catch (err) {
+        console.error("Error fetching departments:", err);
+        // Use default departments if API fails
+        setDepartments(defaultDepartments.map(dept => ({ name: dept })));
+      }
+    };
+    fetchDepartments();
+  }, []);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const res = await axios.post("http://localhost:5000/api/official/login", {
+        official_id: formData.officialid,
+        password: formData.password,
+        department: formData.departmentId,
+      });
+
+      // Store token and department in local storage
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("department", formData.departmentId);
+
+      // Show success message
+      alert(res.data.message || "Login successful!");
+      
+      // Navigate to dashboard
+      navigate("/official/dashboard");
+    } catch (err: any) {
+      console.error("Login error:", err);
+      const errorMessage = err.response?.data?.message || "Login failed. Please check your credentials.";
+      alert(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
@@ -74,11 +118,12 @@ const OfficialLogin: React.FC = () => {
                     onChange={handleInputChange}
                     className="glass-dark w-full pl-10 pr-4 py-3 rounded-lg border border-gray-600 focus:border-orange-400 focus:outline-none transition-colors text-white"
                     required
+                    disabled={loading}
                   >
                     <option value="" className="bg-slate-800">Select your department</option>
-                    {departments.map((dept) => (
-                      <option key={dept} value={dept} className="bg-slate-800">
-                        {dept}
+                    {departments.map((dept, index) => (
+                      <option key={dept.id || index} value={dept.name} className="bg-slate-800">
+                        {dept.name}
                       </option>
                     ))}
                   </select>
@@ -103,6 +148,7 @@ const OfficialLogin: React.FC = () => {
                     className="glass-dark w-full pl-10 pr-4 py-3 rounded-lg border border-gray-600 focus:border-orange-400 focus:outline-none transition-colors text-white placeholder-gray-400"
                     placeholder="Enter your Official ID"
                     required
+                    disabled={loading}
                   />
                 </div>
               </div>
@@ -125,11 +171,13 @@ const OfficialLogin: React.FC = () => {
                     className="glass-dark w-full pl-10 pr-12 py-3 rounded-lg border border-gray-600 focus:border-orange-400 focus:outline-none transition-colors text-white placeholder-gray-400"
                     placeholder="Enter department access code"
                     required
+                    disabled={loading}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    disabled={loading}
                   >
                     {showPassword ? (
                       <EyeOff className="h-5 w-5 text-gray-400 hover:text-orange-400 transition-colors" />
@@ -143,12 +191,12 @@ const OfficialLogin: React.FC = () => {
               {/* Submit Button */}
               <button
                 type="submit"
-                className="w-full glass py-3 px-4 rounded-lg text-orange-400 hover:bg-orange-400 hover:text-white transition-all hover-lift ripple font-medium border border-orange-400/30 hover:border-orange-400"
+                disabled={loading}
+                className="w-full glass py-3 px-4 rounded-lg text-orange-400 hover:bg-orange-400 hover:text-white transition-all hover-lift ripple font-medium border border-orange-400/30 hover:border-orange-400 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Access Dashboard
+                {loading ? 'Accessing...' : 'Access Dashboard'}
               </button>
             </form>
-
 
             {/* Security Notice */}
             <div className="mt-6 p-4 glass-dark rounded-lg border border-amber-400/30">

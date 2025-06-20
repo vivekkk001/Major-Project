@@ -2,42 +2,39 @@ const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
-const pool = require("./config/db"); // DB connection
-require("dotenv").config(); // Load environment variables
+const pool = require("./config/db");
+require("dotenv").config();
 
 const app = express();
 
-// Middlewares
-app.use(cookieParser());
+// FIRST: Setup CORS before anything else
 app.use(cors({
-  origin: [process.env.FRONTEND_URL], // Frontend origin
-  credentials: true
+  origin: "http://localhost:5173",
+  credentials: true,
 }));
+
+app.options("*", cors()); // Enable pre-flight (very important for POST)
+
 app.use(express.json());
-app.use(bodyParser.json());
+app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Routes
-const citizenRoutes = require("./routes/citizen");
-const officialRoutes = require("./routes/official");
-const complaintsRoutes = require("./routes/complaints");
-const adminRoutes = require("./routes/admin");
-
-app.use("/api/admin", adminRoutes);
+// ROUTES
+app.use("/api/citizen", require("./routes/citizen"));
 app.use("/api/official", require("./routes/official"));
-app.use("/api/citizen", citizenRoutes);
-app.use("/api/official", officialRoutes);
-app.use("/api/complaints", complaintsRoutes); 
+app.use("/api/complaints", require("./routes/complaints"));
+app.use("/api/admin", require("./routes/admin"));
 
-// Test DB connection and start server
+//  Test DB + Start server
 pool.query("SELECT NOW()", (err, res) => {
   if (err) {
-    console.error(" Database connection error:", err);
-    process.exit(1); // Exit if DB fails
+    console.error(" DB connection error:", err);
+    process.exit(1);
   } else {
-    console.log(" Database connected at:", res.rows[0].now);
-
+    console.log("DB connected:", res.rows[0].now);
     const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => console.log(` Server running on ${process.env.CLIENT_ORIGIN?.replace(/3000$/, PORT) || "http://localhost:" + PORT}`));
+    app.listen(PORT, () =>
+      console.log(` Server running at http://localhost:${PORT}`)
+    );
   }
 });

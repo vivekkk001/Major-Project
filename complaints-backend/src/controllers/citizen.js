@@ -4,7 +4,7 @@ const pool = require("../config/db");
 
 exports.signup = async (req, res) => {
   try {
-    const { name, email, phone, password } = req.body;
+    const { name, email, phone, password, address } = req.body;
 
     // Check if email already exists
     const existingUser = await pool.query("SELECT * FROM citizens WHERE email = $1", [email]);
@@ -15,8 +15,8 @@ exports.signup = async (req, res) => {
 
     // Insert user into DB
     await pool.query(
-      "INSERT INTO citizens (name, email, phone, password, created_at) VALUES ($1, $2, $3, $4, NOW())",
-      [name, email, phone, hashedPassword]
+      "INSERT INTO citizens (name, email, phone, password, created_at, address) VALUES ($1, $2, $3, $4, NOW(), $5)",
+      [name, email, phone, hashedPassword,address]
     );
 
     res.status(201).json({ message: "Citizen registered successfully" });
