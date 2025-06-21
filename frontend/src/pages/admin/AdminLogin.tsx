@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { ShieldCheck, Mail, Lock } from 'lucide-react';
+import Navbar from '../../components/Navbar.tsx';
 
 const AdminLogin: React.FC = () => {
-  const [email, setEmail] = useState('admin@smartcivic.com');
-  const [password, setPassword] = useState('admin123');
+  const [email, setEmail] = useState('admin@smartcivic.tech');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
@@ -33,6 +34,14 @@ const AdminLogin: React.FC = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-4">
+      <Navbar />
+      
+      {/* Background Effects */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="blob absolute top-20 left-10 w-72 h-72 bg-gradient-to-r from-teal-400/10 to-cyan-400/10 rounded-full morph"></div>
+        <div className="blob absolute bottom-20 right-10 w-96 h-96 bg-gradient-to-r from-blue-400/5 to-purple-400/5 rounded-full morph"></div>
+      </div>
+
       <div className="glass p-8 rounded-xl max-w-md w-full space-y-6 shadow-lg border border-white/10">
         <div className="text-center">
           <div className="relative inline-block mb-4">

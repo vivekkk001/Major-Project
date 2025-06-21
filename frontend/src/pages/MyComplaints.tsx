@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Filter, FileText, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import ComplaintCard from '../components/ComplaintCard';
@@ -8,22 +9,35 @@ import ComplaintCard from '../components/ComplaintCard';
 const MyComplaints: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [complaints, setComplaints] = useState<any[]>([]);
 
-  // Empty complaints array (dummy complaints removed)
-  const complaints: any[] = [];
+  useEffect(() => {
+    const fetchComplaints = async () => {
+      try {
+        const res = await axios.get('http://localhost:5000/api/complaints/my-complaints', {
+          withCredentials: true, // Sends JWT in cookies
+        });
+        setComplaints(res.data || []);
+      } catch (err) {
+        console.error('Failed to fetch complaints:', err);
+      }
+    };
 
-  const filteredComplaints = complaints.filter(complaint => {
-    const matchesSearch = complaint.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         complaint.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || complaint.status === statusFilter;
+    fetchComplaints();
+  }, []);
+
+  const filteredComplaints = complaints.filter((complaint) => {
+    const matchesSearch =
+      complaint.description?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus =
+      statusFilter === 'all' || complaint.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       <Navbar />
-      
-      {/* Background Effects */}
+
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="blob absolute top-20 left-10 w-72 h-72 bg-gradient-to-r from-teal-400/10 to-cyan-400/10 rounded-full morph"></div>
         <div className="blob absolute bottom-20 right-10 w-96 h-96 bg-gradient-to-r from-blue-400/5 to-purple-400/5 rounded-full morph"></div>
@@ -39,7 +53,7 @@ const MyComplaints: React.FC = () => {
                 Track and manage all your submitted complaints
               </p>
             </div>
-            <Link 
+            <Link
               to="/complaint"
               className="mt-6 lg:mt-0 glass glow px-6 py-3 rounded-lg text-teal-400 hover:bg-teal-400 hover:text-white transition-all hover-lift ripple flex items-center space-x-2"
             >
@@ -48,10 +62,9 @@ const MyComplaints: React.FC = () => {
             </Link>
           </div>
 
-          {/* Search and Filters */}
+          {/* Search and Filter */}
           <div className="glass rounded-xl p-6 mb-8">
             <div className="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6">
-              {/* Search */}
               <div className="flex-1 relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Search className="h-5 w-5 text-gray-400" />
@@ -65,7 +78,6 @@ const MyComplaints: React.FC = () => {
                 />
               </div>
 
-              {/* Status Filter */}
               <div className="flex items-center space-x-2">
                 <Filter className="h-5 w-5 text-gray-400" />
                 <select
@@ -82,12 +94,10 @@ const MyComplaints: React.FC = () => {
             </div>
           </div>
 
-          {/* Stats Cards */}
+          {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <div className="glass rounded-lg p-6 text-center hover-lift">
-              <div className="text-2xl font-bold text-white mb-1">
-                {complaints.length}
-              </div>
+              <div className="text-2xl font-bold text-white mb-1">{complaints.length}</div>
               <div className="text-gray-400 text-sm">Total Complaints</div>
             </div>
             <div className="glass rounded-lg p-6 text-center hover-lift">
@@ -114,20 +124,19 @@ const MyComplaints: React.FC = () => {
           <div className="space-y-6">
             {filteredComplaints.length > 0 ? (
               filteredComplaints.map((complaint) => (
-                <ComplaintCard key={complaint.id} {...complaint} />
+                <ComplaintCard key={complaint.complaint_id} {...complaint} />
               ))
             ) : (
               <div className="glass rounded-xl p-12 text-center">
                 <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-white mb-2">No complaints found</h3>
                 <p className="text-gray-400 mb-6">
-                  {searchTerm || statusFilter !== 'all' 
+                  {searchTerm || statusFilter !== 'all'
                     ? 'Try adjusting your search or filter criteria'
-                    : "You haven't submitted any complaints yet"
-                  }
+                    : "You haven't submitted any complaints yet"}
                 </p>
                 {!searchTerm && statusFilter === 'all' && (
-                  <Link 
+                  <Link
                     to="/complaint"
                     className="inline-flex items-center space-x-2 glass glow px-6 py-3 rounded-lg text-teal-400 hover:bg-teal-400 hover:text-white transition-all hover-lift ripple"
                   >

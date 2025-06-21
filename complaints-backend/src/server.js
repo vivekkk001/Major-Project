@@ -13,17 +13,20 @@ app.use(cors({
   credentials: true,
 }));
 
-app.options("*", cors()); // Enable pre-flight (very important for POST)
-
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(bodyParser.urlencoded({ extended: true }));
+
 
 // ROUTES
 app.use("/api/citizen", require("./routes/citizen"));
 app.use("/api/official", require("./routes/official"));
 app.use("/api/complaints", require("./routes/complaints"));
 app.use("/api/admin", require("./routes/admin"));
+
+app.use("*", (req, res) => {
+  res.status(404).json({ message: "Route not found" });
+});
 
 //  Test DB + Start server
 pool.query("SELECT NOW()", (err, res) => {

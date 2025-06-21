@@ -23,16 +23,6 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// 🔍 Utility to check image blur using Laplacian variance
-// function isImageBlurred(buffer, threshold = 100) {
-//   const image = cv.imdecode(buffer); // Decode buffer into Mat
-//   const gray = image.bgrToGray(); // Convert to grayscale
-//   const laplacian = gray.laplacian(cv.CV_64F); // Apply Laplacian
-//   const variance = laplacian.meanStdDev().stddev.at(0) ** 2; // Variance
-
-//   console.log("🔍 Blur variance:", variance);
-//   return variance < threshold;
-// }
 
 // 📌 Complaint Submission Route
 router.post("/", verifyToken, upload.single("image"), async (req, res) => {
@@ -43,11 +33,6 @@ router.post("/", verifyToken, upload.single("image"), async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ message: "Image file is required" });
     }
-    // if (isImageBlurred(req.file.buffer)) {
-    //   return res.status(400).json({
-    //     message: "Image is too blurry. Please retake the photo or upload a clearer one.",
-    //   });
-    // }
  
     // 🔹 Step 1: ML Department classification
     const mlResponse = await axios.post(process.env.ML_MODEL_API_URL, { description });

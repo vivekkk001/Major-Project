@@ -1,26 +1,24 @@
 import React from 'react';
-import { Calendar, MapPin, User, AlertCircle, CheckCircle, Clock } from 'lucide-react';
+import { Calendar, MapPin, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 
 interface ComplaintCardProps {
-  id: string;
-  title: string;
+  complaint_id: number;
   description: string;
-  category: string;
+  department: string;
   status: 'pending' | 'in-progress' | 'resolved';
-  date: string;
-  location: string;
-  priority: 'low' | 'medium' | 'high';
+  created_at: string;
+  address: string;
+  image_url?: string;
 }
 
 const ComplaintCard: React.FC<ComplaintCardProps> = ({
-  id,
-  title,
+  complaint_id,
   description,
-  category,
+  department,
   status,
-  date,
-  location,
-  priority
+  created_at,
+  address,
+  image_url,
 }) => {
   const getStatusIcon = () => {
     switch (status) {
@@ -48,25 +46,12 @@ const ComplaintCard: React.FC<ComplaintCardProps> = ({
     }
   };
 
-  const getPriorityColor = () => {
-    switch (priority) {
-      case 'high':
-        return 'border-l-red-400';
-      case 'medium':
-        return 'border-l-yellow-400';
-      case 'low':
-        return 'border-l-green-400';
-      default:
-        return 'border-l-gray-400';
-    }
-  };
-
   return (
-    <div className={`glass rounded-lg p-6 hover-lift border-l-4 ${getPriorityColor()} group`}>
+    <div className="glass rounded-lg p-6 hover-lift border-l-4 border-l-teal-500 group">
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
           <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-teal-400 transition-colors">
-            {title}
+            Complaint #{complaint_id}
           </h3>
           <p className="text-gray-400 text-sm mb-3 line-clamp-2">
             {description}
@@ -82,24 +67,31 @@ const ComplaintCard: React.FC<ComplaintCardProps> = ({
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-1">
             <Calendar className="h-3 w-3" />
-            <span>{date}</span>
+            <span>{new Date(created_at).toLocaleDateString()}</span>
           </div>
           <div className="flex items-center space-x-1">
             <MapPin className="h-3 w-3" />
-            <span>{location}</span>
+            <span>{address}</span>
           </div>
         </div>
         <div className="flex items-center space-x-1">
           <span className="px-2 py-1 bg-teal-400/10 text-teal-400 rounded">
-            {category}
+            {department}
           </span>
         </div>
       </div>
 
       <div className="mt-4 pt-4 border-t border-gray-700/50">
         <p className="text-xs text-gray-500">
-          Complaint ID: <span className="text-teal-400 font-mono">{id}</span>
+          Complaint ID: <span className="text-teal-400 font-mono">{complaint_id}</span>
         </p>
+        {image_url && (
+          <img
+            src={image_url}
+            alt="Complaint"
+            className="mt-4 rounded-md border border-gray-700 max-w-xs"
+          />
+        )}
       </div>
     </div>
   );

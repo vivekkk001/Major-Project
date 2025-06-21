@@ -8,7 +8,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ComplaintForm from './pages/ComplaintForm';
 import MyComplaints from './pages/MyComplaints';
-
+import CitizenProfile from './pages/CitizenProfile';
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
 import DepartmentManagement from './pages/admin/DepartmentManagement';
@@ -33,7 +33,7 @@ function App() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/complaint" element={<ComplaintForm />} />
           <Route path="/my-complaints" element={<MyComplaints />} />
-
+          <Route path="/profile" element={<CitizenProfile />} />
           {/* Admin */}
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/departments" element={<DepartmentManagement />} />

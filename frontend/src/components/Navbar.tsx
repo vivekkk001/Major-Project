@@ -1,26 +1,80 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, Shield, User, FileText, Settings, BarChart3, LogOut, UserCircle2 } from 'lucide-react';
+import {
+  Menu, X, Shield, User, FileText, Settings,
+  BarChart3, LogOut, Bell, ChevronDown
+} from 'lucide-react';
 
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
   const token = localStorage.getItem('token');
-  const name = localStorage.getItem('name') || 'User';
 
+  // Scroll effect
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Close profile menu on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
+        setShowProfileMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Fetch user profile
+  useEffect(() => {
+    const fetchUser = async () => {
+      if (!token) return;
+
+      try {
+        const res = await fetch('http://localhost:5000/api/citizen/me', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          setUser(data);
+        } else {
+          setUser(null);
+        }
+      } catch (err) {
+        console.error('Error fetching user:', err);
+        setUser(null);
+      }
+    };
+
+    fetchUser();
+  }, [token]);
+
   const handleLogout = () => {
     localStorage.clear();
+    setShowProfileMenu(false);
+    setUser(null);
     navigate('/home');
     window.location.reload();
+  };
+
+  const getUserInitials = (name: string): string => {
+    return name
+      .split(' ')
+      .map(word => word[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
   };
 
   return (
@@ -38,41 +92,69 @@ const Navbar: React.FC = () => {
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link to="/" className="text-gray-300 hover:text-teal-400 transition-colors hover-lift">Home</Link>
-            <Link to="/complaint" className="text-gray-300 hover:text-teal-400 transition-colors hover-lift">File Complaint</Link>
-            <Link to="/my-complaints" className="text-gray-300 hover:text-teal-400 transition-colors hover-lift flex items-center space-x-1">
+            <Link to="/" className="text-gray-300 hover:text-teal-400 transition-colors">Home</Link>
+            <Link to="/complaint" className="text-gray-300 hover:text-teal-400 transition-colors">File Complaint</Link>
+            <Link to="/my-complaints" className="text-gray-300 hover:text-teal-400 transition-colors flex items-center space-x-1">
               <BarChart3 className="h-4 w-4" />
               <span>Track Issues</span>
             </Link>
 
-            {token ? (
-              <div className="relative">
-                <button
-                  onClick={() => setShowProfileMenu(!showProfileMenu)}
-                  className="flex items-center space-x-2 text-teal-400 hover:text-white"
-                >
-                  <UserCircle2 className="h-6 w-6" />
-                  <span>{name}</span>
+            {token && user ? (
+              <div className="flex items-center space-x-4">
+                <button className="relative p-2 text-gray-400 hover:text-teal-400 transition-colors">
+                  <Bell className="h-5 w-5" />
+                  <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
                 </button>
-                {showProfileMenu && (
-                  <div className="absolute right-0 mt-2 w-48 bg-slate-800 border border-gray-700 rounded-lg shadow-lg z-50">
-                    <div className="p-4 text-sm text-gray-300 border-b border-gray-700">
-                      Logged in as <span className="font-semibold text-teal-400">{name}</span>
+
+                <div className="relative" ref={profileMenuRef}>
+                  <button
+                    onClick={() => setShowProfileMenu(!showProfileMenu)}
+                    className="flex items-center space-x-2 text-teal-400 hover:text-white transition-colors group"
+                  >
+                    <div className="h-8 w-8 rounded-full bg-gradient-to-r from-teal-400 to-blue-500 flex items-center justify-center text-white text-sm font-semibold">
+                      {getUserInitials(user.name)}
                     </div>
-                    <button
-                      onClick={handleLogout}
-                      className="flex items-center w-full px-4 py-2 text-sm text-red-400 hover:bg-slate-700"
-                    >
-                      <LogOut className="h-4 w-4 mr-2" /> Logout
-                    </button>
-                  </div>
-                )}
+                    <span className="hidden lg:block">{user.name}</span>
+                    <ChevronDown className={`h-4 w-4 transition-transform ${showProfileMenu ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {showProfileMenu && (
+                    <div className="absolute right-0 mt-2 w-64 bg-slate-800/95 backdrop-blur-md border border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden">
+                      <div className="p-4 bg-gradient-to-r from-teal-400/10 to-blue-500/10 border-b border-gray-700">
+                        <div className="flex items-center space-x-3">
+                          <div className="h-12 w-12 rounded-full bg-gradient-to-r from-teal-400 to-blue-500 flex items-center justify-center text-white font-semibold">
+                            {getUserInitials(user.name)}
+                          </div>
+                          <div>
+                            <div className="text-white font-medium">{user.name}</div>
+                            <div className="text-gray-400 text-sm">{user.email}</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="py-2">
+                        <Link to="/profile" className="flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition-colors" onClick={() => setShowProfileMenu(false)}>
+                          <User className="h-4 w-4 mr-3" /> View Profile
+                        </Link>
+                        <Link to="/my-complaints" className="flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition-colors" onClick={() => setShowProfileMenu(false)}>
+                          <FileText className="h-4 w-4 mr-3" /> My Complaints
+                        </Link>
+                        <Link to="/settings" className="flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition-colors" onClick={() => setShowProfileMenu(false)}>
+                          <Settings className="h-4 w-4 mr-3" /> Settings
+                        </Link>
+                        <hr className="my-2 border-gray-700" />
+                        <button onClick={handleLogout} className="flex items-center w-full px-4 py-2 text-sm text-red-400 hover:bg-red-900/20 transition-colors">
+                          <LogOut className="h-4 w-4 mr-3" /> Logout
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             ) : (
               <div className="flex items-center space-x-4">
                 <Link to="/login" className="text-gray-300 hover:text-teal-400 transition-colors flex items-center space-x-1">
-                  <User className="h-4 w-4" />
-                  <span>Login</span>
+                  <User className="h-4 w-4" /><span>Login</span>
                 </Link>
                 <Link to="/signup" className="glass px-4 py-2 rounded-lg text-teal-400 hover:bg-teal-400 hover:text-white transition-all ripple">
                   Sign Up
@@ -92,18 +174,28 @@ const Navbar: React.FC = () => {
           <div className="glass rounded-lg p-4 space-y-4">
             <Link to="/" className="block text-gray-300 hover:text-teal-400 transition-colors py-2" onClick={() => setIsOpen(false)}>Home</Link>
             <Link to="/complaint" className="block text-gray-300 hover:text-teal-400 transition-colors py-2" onClick={() => setIsOpen(false)}>File Complaint</Link>
-            <Link to="/my-complaints" className="block text-gray-300 hover:text-teal-400 transition-colors py-2 flex items-center space-x-1" onClick={() => setIsOpen(false)}>
-              <BarChart3 className="h-4 w-4" />
-              <span>Track Issues</span>
-            </Link>
+            <Link to="/my-complaints" className="block text-gray-300 hover:text-teal-400 transition-colors py-2" onClick={() => setIsOpen(false)}>Track Issues</Link>
             <hr className="border-gray-700" />
 
-            {token ? (
+            {token && user ? (
               <>
-                <div className="text-sm text-gray-300 px-2">Hello, <span className="font-medium text-teal-400">{name}</span></div>
-                <button onClick={handleLogout} className="block w-full text-left text-red-400 hover:bg-slate-700 px-4 py-2 rounded transition-colors">
-                  <LogOut className="inline-block h-4 w-4 mr-2" /> Logout
-                </button>
+                <div className="flex items-center space-x-3 p-3 bg-gradient-to-r from-teal-400/10 to-blue-500/10 rounded-lg">
+                  <div className="h-10 w-10 rounded-full bg-gradient-to-r from-teal-400 to-blue-500 flex items-center justify-center text-white font-semibold">
+                    {getUserInitials(user.name)}
+                  </div>
+                  <div>
+                    <div className="text-white font-medium">{user.name}</div>
+                    <div className="text-gray-400 text-sm">{user.email}</div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Link to="/profile" className="block text-gray-300 hover:text-teal-400 transition-colors py-2" onClick={() => setIsOpen(false)}>View Profile</Link>
+                  <Link to="/settings" className="block text-gray-300 hover:text-teal-400 transition-colors py-2" onClick={() => setIsOpen(false)}>Settings</Link>
+                  <button onClick={() => { handleLogout(); setIsOpen(false); }} className="block text-red-400 hover:bg-red-900/20 px-4 py-2 rounded transition-colors">
+                    Logout
+                  </button>
+                </div>
               </>
             ) : (
               <>

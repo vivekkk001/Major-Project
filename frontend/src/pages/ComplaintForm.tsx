@@ -1,64 +1,131 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import axios from 'axios';
-import { Camera, Loader, MapPin, Navigation, Send, AlertCircle } from 'lucide-react';
-import Navbar from '../components/Navbar'; // ✅ using your existing Navbar
+import { Camera, Loader, MapPin, Navigation, Send, AlertCircle, X, RotateCcw } from 'lucide-react';
+import Navbar from '../components/Navbar';
+import { useNavigate } from 'react-router-dom';
 
 const ComplaintForm = () => {
   const [description, setDescription] = useState('');
-  const [image, setImage] = useState<File | null>(null);
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [location, setLocation] = useState({ lat: null as number | null, lng: null as number | null });
   const [message, setMessage] = useState('');
   const [isBlurry, setIsBlurry] = useState(false);
   const [loading, setLoading] = useState(false);
   const [locationLoading, setLocationLoading] = useState(false);
+  const [showCamera, setShowCamera] = useState(false);
+  const [stream, setStream] = useState<MediaStream | null>(null);
 
-  // 📷 Check if image is blurry
-  const checkImageBlur = (file: File) => {
-    return new Promise<boolean>((resolve) => {
-      const img = new Image();
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d')!;
-      const reader = new FileReader();
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const navigate = useNavigate();
 
-      reader.onload = () => {
-        if (typeof reader.result === 'string') {
-          img.onload = () => {
-            canvas.width = img.width;
-            canvas.height = img.height;
-            ctx.drawImage(img, 0, 0);
-            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+  useEffect(() => {
+    if (videoRef.current && stream) {
+      videoRef.current.srcObject = stream;
+      videoRef.current.onloadedmetadata = () => {
+        videoRef.current?.play().catch((e) => {
+          console.error('Video playback failed:', e);
+          setMessage('Camera stream loaded but video playback failed.');
+        });
+      };
+    }
+  }, [stream]);
 
-            let sum = 0;
-            for (let i = 0; i < imageData.length; i += 4) {
-              const gray = 0.299 * imageData[i] + 0.587 * imageData[i + 1] + 0.114 * imageData[i + 2];
-              sum += gray;
-            }
-            const mean = sum / (imageData.length / 4);
+  const checkImageBlur = (imageData: Uint8ClampedArray, width: number, height: number): boolean => {
+    let sum = 0;
+    for (let i = 0; i < imageData.length; i += 4) {
+      const gray = 0.299 * imageData[i] + 0.587 * imageData[i + 1] + 0.114 * imageData[i + 2];
+      sum += gray;
+    }
+    const mean = sum / (imageData.length / 4);
+    let variance = 0;
+    for (let i = 0; i < imageData.length; i += 4) {
+      const gray = 0.299 * imageData[i] + 0.587 * imageData[i + 1] + 0.114 * imageData[i + 2];
+      variance += (gray - mean) ** 2;
+    }
+    const stddev = Math.sqrt(variance / (imageData.length / 4));
+    return stddev < 20;
+  };
 
-            let variance = 0;
-            for (let i = 0; i < imageData.length; i += 4) {
-              const gray = 0.299 * imageData[i] + 0.587 * imageData[i + 1] + 0.114 * imageData[i + 2];
-              variance += (gray - mean) ** 2;
-            }
+  const startCamera = async () => {
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setMessage('Camera not supported on this device/browser.');
+        return;
+      }
 
-            const stddev = Math.sqrt(variance / (imageData.length / 4));
-            resolve(stddev < 20); // Threshold for blurriness
-          };
-          img.src = reader.result;
+      const constraints = {
+        video: {
+          facingMode: { ideal: 'environment' },
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
         }
       };
 
-      reader.readAsDataURL(file);
-    });
+      const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+      setStream(mediaStream);
+      setShowCamera(true);
+      setMessage('');
+    } catch (error: any) {
+      console.error('Error accessing camera:', error);
+      let errorMessage = 'Failed to access camera. ';
+      if (error.name === 'NotAllowedError') {
+        errorMessage += 'Please allow camera permissions and try again.';
+      } else if (error.name === 'NotFoundError') {
+        errorMessage += 'No camera found on this device.';
+      } else {
+        errorMessage += 'Please check camera permissions.';
+      }
+      setMessage(errorMessage);
+    }
   };
 
-  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const blurry = await checkImageBlur(file);
-      setImage(file);
-      setIsBlurry(blurry);
+  const stopCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach((track) => track.stop());
+      setStream(null);
     }
+    setShowCamera(false);
+  };
+
+  const capturePhoto = useCallback(() => {
+    if (videoRef.current && canvasRef.current) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      if (video.readyState !== video.HAVE_ENOUGH_DATA) {
+        setMessage('Please wait for camera to load.');
+        return;
+      }
+
+      canvas.width = video.videoWidth || 640;
+      canvas.height = video.videoHeight || 480;
+
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const blurry = checkImageBlur(imageData.data, canvas.width, canvas.height);
+
+      const dataURL = canvas.toDataURL('image/jpeg', 0.8);
+      setCapturedImage(dataURL);
+      setIsBlurry(blurry);
+      stopCamera();
+
+      setMessage(blurry ? 'Image is blurry. Retake for better quality.' : 'Photo captured successfully!');
+    }
+  }, [stream]);
+
+  const retakePhoto = () => {
+    setCapturedImage(null);
+    setIsBlurry(false);
+    startCamera();
+  };
+
+  const removeImage = () => {
+    setCapturedImage(null);
+    setIsBlurry(false);
   };
 
   const handleLocation = () => {
@@ -79,7 +146,7 @@ const ComplaintForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!description || !image || !location.lat || !location.lng) {
+    if (!description || !capturedImage || !location.lat || !location.lng) {
       setMessage('Please fill all required fields.');
       return;
     }
@@ -87,9 +154,13 @@ const ComplaintForm = () => {
     setLoading(true);
     setMessage('');
 
+    const response = await fetch(capturedImage);
+    const blob = await response.blob();
+    const imageFile = new File([blob], 'captured-image.jpg', { type: 'image/jpeg' });
+
     const formData = new FormData();
     formData.append('description', description);
-    formData.append('image', image);
+    formData.append('image', imageFile);
     formData.append('latitude', location.lat!.toString());
     formData.append('longitude', location.lng!.toString());
 
@@ -100,12 +171,7 @@ const ComplaintForm = () => {
       });
 
       if (res.status === 201) {
-        setMessage('✅ Complaint submitted successfully!');
-        setDescription('');
-        setImage(null);
-        setLocation({ lat: null, lng: null });
-        setIsBlurry(false);
-        (document.getElementById('image') as HTMLInputElement).value = '';
+        navigate('/my-complaints');
       }
     } catch (err: any) {
       console.error(err);
@@ -129,6 +195,7 @@ const ComplaintForm = () => {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Description */}
             <div>
               <label className="text-lg block mb-2">Complaint Description <span className="text-red-400">*</span></label>
               <textarea
@@ -137,35 +204,98 @@ const ComplaintForm = () => {
                 rows={4}
                 required
                 placeholder="Describe the issue..."
-                className="w-full p-4 rounded-lg bg-gray-800 border border-gray-600 text-white"
+                className="w-full p-4 rounded-lg bg-gray-800 border border-gray-600 text-white placeholder-gray-400"
               />
             </div>
 
+            {/* Camera */}
             <div>
               <label className="text-lg block mb-2">Capture Image <span className="text-red-400">*</span></label>
-              <input
-                type="file"
-                id="image"
-                accept="image/*"
-                capture="environment"
-                required
-                onChange={handleImageChange}
-                className="w-full p-3 bg-gray-800 border border-gray-600 rounded-lg text-white"
-              />
-              {isBlurry && (
-                <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
-                  <AlertCircle className="h-4 w-4" /> The image appears blurry. Consider retaking it.
-                </p>
+
+              {!capturedImage && !showCamera && (
+                <button
+                  type="button"
+                  onClick={startCamera}
+                  className="w-full py-4 bg-blue-600 hover:bg-blue-700 rounded-lg flex items-center justify-center gap-2 font-semibold"
+                >
+                  <Camera className="h-5 w-5" />
+                  Open Camera
+                </button>
               )}
+
+              {showCamera && (
+                <div className="relative">
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="w-full h-64 object-cover rounded-lg bg-black"
+                  />
+                  <div className="flex gap-2 mt-2">
+                    <button
+                      type="button"
+                      onClick={capturePhoto}
+                      className="flex-1 py-3 bg-green-600 hover:bg-green-700 rounded-lg flex items-center justify-center gap-2 font-semibold"
+                    >
+                      <Camera className="h-4 w-4" />
+                      Capture Photo
+                    </button>
+                    <button
+                      type="button"
+                      onClick={stopCamera}
+                      className="flex-1 py-3 bg-red-600 hover:bg-red-700 rounded-lg flex items-center justify-center gap-2 font-semibold"
+                    >
+                      <X className="h-4 w-4" />
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {capturedImage && (
+                <div className="space-y-3 mt-3">
+                  <div className="relative">
+                    <img
+                      src={capturedImage}
+                      alt="Captured"
+                      className="w-full rounded-lg border border-gray-600"
+                    />
+                    <button
+                      type="button"
+                      onClick={removeImage}
+                      className="absolute top-2 right-2 p-1 bg-red-600 hover:bg-red-700 rounded-full"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                  {isBlurry && (
+                    <p className="text-red-400 text-sm flex items-center gap-1">
+                      <AlertCircle className="h-4 w-4" />
+                      The image appears blurry. Consider retaking it.
+                    </p>
+                  )}
+                  <button
+                    type="button"
+                    onClick={retakePhoto}
+                    className="w-full py-2 bg-yellow-600 hover:bg-yellow-700 rounded-lg flex items-center justify-center gap-2"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                    Retake Photo
+                  </button>
+                </div>
+              )}
+              <canvas ref={canvasRef} className="hidden" />
             </div>
 
+            {/* Location */}
             <div>
               <label className="text-lg block mb-2">Location <span className="text-red-400">*</span></label>
               <button
                 type="button"
                 onClick={handleLocation}
                 disabled={locationLoading}
-                className="w-full py-3 bg-teal-600 hover:bg-teal-700 rounded-lg flex items-center justify-center gap-2"
+                className="w-full py-3 bg-teal-600 hover:bg-teal-700 disabled:opacity-50 rounded-lg flex items-center justify-center gap-2"
               >
                 {locationLoading ? <Loader className="animate-spin h-5 w-5" /> : <Navigation className="h-5 w-5" />}
                 Get Current Location
@@ -178,10 +308,11 @@ const ComplaintForm = () => {
               )}
             </div>
 
+            {/* Submit */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-4 bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600 rounded-lg flex items-center justify-center gap-2 font-semibold text-lg"
+              className="w-full py-4 bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600 disabled:opacity-50 rounded-lg flex items-center justify-center gap-2 font-semibold text-lg"
             >
               {loading ? <Loader className="animate-spin h-5 w-5" /> : <Send className="h-5 w-5" />}
               {loading ? 'Submitting...' : 'Submit Complaint'}

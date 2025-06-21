@@ -5,9 +5,9 @@ import { FileText, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
 
 const OfficialDashboard: React.FC = () => {
   const [complaints, setComplaints] = useState<any[]>([]);
-  const [editedStatuses, setEditedStatuses] = useState<any>({});
-  const [editedDescriptions, setEditedDescriptions] = useState<any>({});
-  const [editedAddresses, setEditedAddresses] = useState<any>({});
+  const [editedStatuses, setEditedStatuses] = useState<{ [key: string]: string }>({});
+  const [editedDescriptions, setEditedDescriptions] = useState<{ [key: string]: string }>({});
+  const [editedAddresses, setEditedAddresses] = useState<{ [key: string]: string }>({});
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   const token = localStorage.getItem('token');
@@ -29,31 +29,55 @@ const OfficialDashboard: React.FC = () => {
   }, [token, department]);
 
   const handleChange = (id: string, field: 'status' | 'description' | 'address', value: string) => {
-    type FieldMap = { [id: string]: string };
-
-    const [editedStatuses, setEditedStatuses] = useState<FieldMap>({});
-    const [editedDescriptions, setEditedDescriptions] = useState<FieldMap>({});
-    const [editedAddresses, setEditedAddresses] = useState<FieldMap>({});
-
+    if (field === 'status') {
+      setEditedStatuses(prev => ({ ...prev, [id]: value }));
+    } else if (field === 'description') {
+      setEditedDescriptions(prev => ({ ...prev, [id]: value }));
+    } else if (field === 'address') {
+      setEditedAddresses(prev => ({ ...prev, [id]: value }));
+    }
   };
 
   const handleSave = async (id: string, field: 'status' | 'description' | 'address') => {
     const value =
-      field === 'status' ? editedStatuses[id] : field === 'description' ? editedDescriptions[id] : editedAddresses[id];
+      field === 'status' ? editedStatuses[id] :
+      field === 'description' ? editedDescriptions[id] :
+      editedAddresses[id];
+
+    // 🔐 Prompt the user to confirm
+    const userInput = window.prompt(`Type 'save' to confirm updating the ${field} of Complaint ID ${id}`);
+    if (!userInput || userInput.trim().toLowerCase() !== 'save') {
+      alert('Update canceled. You must type "save" to confirm.');
+      return;
+    }
+
     try {
       await axios.put(
         `http://localhost:5000/api/complaints/${id}/${field}`,
         { [field]: value },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setComplaints(prev => prev.map(c => (c.complaint_id === id ? { ...c, [field]: value } : c)));
-      type FieldMap = { [id: string]: string };
 
-      const [editedStatuses, setEditedStatuses] = useState<FieldMap>({});
-      const [editedDescriptions, setEditedDescriptions] = useState<FieldMap>({});
-      const [editedAddresses, setEditedAddresses] = useState<FieldMap>({});
+      setComplaints(prev =>
+        prev.map(c => (c.complaint_id === id ? { ...c, [field]: value } : c))
+      );
 
-      alert(`${field} updated successfully!`);
+      // Clear local edits
+      if (field === 'status') {
+        const updated = { ...editedStatuses };
+        delete updated[id];
+        setEditedStatuses(updated);
+      } else if (field === 'description') {
+        const updated = { ...editedDescriptions };
+        delete updated[id];
+        setEditedDescriptions(updated);
+      } else if (field === 'address') {
+        const updated = { ...editedAddresses };
+        delete updated[id];
+        setEditedAddresses(updated);
+      }
+
+      alert(`${field.charAt(0).toUpperCase() + field.slice(1)} updated successfully!`);
     } catch (err) {
       console.error(`Error updating ${field}:`, err);
       alert(`Failed to update ${field}.`);
@@ -72,9 +96,12 @@ const OfficialDashboard: React.FC = () => {
           <div className="mb-8">
             <h1 className="text-4xl font-bold text-white mb-2">Department Dashboard</h1>
             <p className="text-gray-400 text-lg">Manage assigned complaints and track department performance</p>
-            <p className="text-teal-400 mt-2 text-sm">Currently logged in through: <span className="font-semibold">{department} department</span></p>
+            <p className="text-teal-400 mt-2 text-sm">
+              Currently logged in through: <span className="font-semibold">{department} department</span>
+            </p>
           </div>
 
+          {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
             <div className="glass rounded-lg p-6 hover-lift">
               <div className="flex items-center justify-between">
@@ -114,6 +141,7 @@ const OfficialDashboard: React.FC = () => {
             </div>
           </div>
 
+          {/* Search */}
           <div className="mb-6">
             <input
               type="text"
@@ -124,14 +152,17 @@ const OfficialDashboard: React.FC = () => {
             />
           </div>
 
+          {/* Complaint List */}
           <div className="space-y-6">
             {filteredComplaints.length > 0 ? (
               filteredComplaints.map(c => {
-                const status = editedStatuses[c.complaint_id] ?? c.status;
-                const desc = editedDescriptions[c.complaint_id] ?? c.description;
-                const addr = editedAddresses[c.complaint_id] ?? c.address;
+                const id = c.complaint_id;
+                const status = editedStatuses[id] ?? c.status;
+                const desc = editedDescriptions[id] ?? c.description;
+                const addr = editedAddresses[id] ?? c.address;
+
                 return (
-                  <div key={c.complaint_id} className="glass rounded-xl p-6">
+                  <div key={id} className="glass rounded-xl p-6">
                     <div className="flex justify-between items-center mb-3">
                       <h3 className="text-xl font-semibold text-white">{c.title || 'Complaint Details'}</h3>
                       <span className="text-sm bg-yellow-600 text-white px-3 py-1 rounded-full">{status}</span>
@@ -139,20 +170,22 @@ const OfficialDashboard: React.FC = () => {
                     <p className="text-gray-300 mb-2">{desc}</p>
                     <div className="text-gray-400 text-sm mb-2">
                       <p>Location: {addr}</p>
-                      <p>Complaint ID: <span className="text-teal-400">{c.complaint_id}</span></p>
+                      <p>Complaint ID: <span className="text-teal-400">{id}</span></p>
                     </div>
+
+                    {/* Editable Fields */}
                     <div className="mt-4 space-y-4">
                       <div>
                         <label className="block text-sm text-gray-300 mb-1">Update Description</label>
                         <textarea
                           value={desc}
-                          onChange={e => handleChange(c.complaint_id, 'description', e.target.value)}
+                          onChange={e => handleChange(id, 'description', e.target.value)}
                           rows={2}
                           className="w-full rounded bg-slate-700 border border-gray-600 text-white p-2"
                         />
                         {desc !== c.description && (
                           <button
-                            onClick={() => handleSave(c.complaint_id, 'description')}
+                            onClick={() => handleSave(id, 'description')}
                             className="mt-2 bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
                           >
                             Save Description
@@ -163,13 +196,13 @@ const OfficialDashboard: React.FC = () => {
                         <label className="block text-sm text-gray-300 mb-1">Update Address</label>
                         <textarea
                           value={addr}
-                          onChange={e => handleChange(c.complaint_id, 'address', e.target.value)}
+                          onChange={e => handleChange(id, 'address', e.target.value)}
                           rows={2}
                           className="w-full rounded bg-slate-700 border border-gray-600 text-white p-2"
                         />
                         {addr !== c.address && (
                           <button
-                            onClick={() => handleSave(c.complaint_id, 'address')}
+                            onClick={() => handleSave(id, 'address')}
                             className="mt-2 bg-yellow-600 text-white px-3 py-1 rounded hover:bg-yellow-700"
                           >
                             Save Address
@@ -180,7 +213,7 @@ const OfficialDashboard: React.FC = () => {
                         <label className="block text-sm text-gray-300 mb-1">Update Status</label>
                         <select
                           value={status}
-                          onChange={e => handleChange(c.complaint_id, 'status', e.target.value)}
+                          onChange={e => handleChange(id, 'status', e.target.value)}
                           className="bg-slate-800 border border-gray-600 text-white rounded px-3 py-2"
                         >
                           <option value="Pending">Pending</option>
@@ -189,7 +222,7 @@ const OfficialDashboard: React.FC = () => {
                         </select>
                         {status !== c.status && (
                           <button
-                            onClick={() => handleSave(c.complaint_id, 'status')}
+                            onClick={() => handleSave(id, 'status')}
                             className="mt-2 ml-3 bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-600"
                           >
                             Save Status
