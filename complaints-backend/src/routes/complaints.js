@@ -10,7 +10,7 @@ const verifyToken = require("../middleware/auth");
 const reverseGeocode = require("../utils/reverseGeocode");
 const { sendDepartmentEmail, sendCitizenEmail } = require("../utils/sendEmail");
 const blockchainService = require("../utils/blockchainService");
-// const cv = require('@u4/opencv4nodejs');
+
 
 require("dotenv").config();
 const router = express.Router();
