@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Building2, Lock, Eye, EyeOff, Shield, User } from 'lucide-react';
+import { Building2, Lock, Eye, EyeOff, Shield, User, ShieldCheck } from 'lucide-react';
 import axios from 'axios';
-import Navbar from '../../components/Navbar';
 
 interface Department {
   id: number;
@@ -38,7 +37,6 @@ const OfficialLogin: React.FC = () => {
 
         if (Array.isArray(data)) {
           if (typeof data[0] === 'string') {
-            // If backend returns array of strings
             setDepartments(data.map((name, idx) => ({ id: idx, name })));
           } else {
             setDepartments(data);
@@ -87,9 +85,16 @@ const OfficialLogin: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      <Navbar />
 
-      {/* Blurred Background */}
+      {/* SmartCivic Logo */}
+      <div className="absolute top-6 left-20 flex items-center space-x-2 z-50">
+        <Link to="/home" className="flex items-center space-x-2 hover:opacity-80 transition">
+          <ShieldCheck className="text-teal-400 h-6 w-6" />
+          <span className="text-xl font-bold text-cyan-400">SmartCivic</span>
+        </Link>
+      </div>
+
+      {/* Background Blobs */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="blob absolute top-20 left-10 w-72 h-72 bg-gradient-to-r from-teal-400/10 to-cyan-400/10 rounded-full morph"></div>
         <div className="blob absolute bottom-20 right-10 w-96 h-96 bg-gradient-to-r from-blue-400/5 to-purple-400/5 rounded-full morph"></div>
@@ -98,6 +103,7 @@ const OfficialLogin: React.FC = () => {
       {/* Login Card */}
       <div className="relative flex items-center justify-center min-h-screen px-4 py-20">
         <div className="w-full max-w-md">
+
           {/* Header */}
           <div className="text-center mb-8">
             <div className="relative mb-4">
@@ -111,6 +117,7 @@ const OfficialLogin: React.FC = () => {
           {/* Form */}
           <div className="glass rounded-2xl p-8 hover-lift">
             <form onSubmit={handleSubmit} className="space-y-6">
+
               {/* Department */}
               <div>
                 <label htmlFor="department" className="block text-sm font-medium text-gray-300 mb-2">Department</label>
@@ -172,7 +179,7 @@ const OfficialLogin: React.FC = () => {
                     value={formData.password}
                     onChange={handleInputChange}
                     className="glass-dark w-full pl-10 pr-12 py-3 rounded-lg border border-gray-600 focus:border-orange-400 focus:outline-none transition-colors text-white placeholder-gray-400"
-                    placeholder="Enter department access code"
+                    placeholder="Enter your Password"
                     required
                     disabled={loading}
                   />
@@ -191,13 +198,13 @@ const OfficialLogin: React.FC = () => {
                 </div>
               </div>
 
-              {/* Submit */}
+              {/* Submit Button */}
               <button
                 type="submit"
                 disabled={loading}
                 className="w-full glass py-3 px-4 rounded-lg text-orange-400 hover:bg-orange-400 hover:text-white transition-all hover-lift ripple font-medium border border-orange-400/30 hover:border-orange-400 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'Accessing...' : 'Access Dashboard'}
+                {loading ? 'Accessing...' : 'Login as Departmental'}
               </button>
             </form>
 
@@ -224,6 +231,7 @@ const OfficialLogin: React.FC = () => {
                 </Link>
               </p>
             </div>
+
           </div>
         </div>
       </div>

@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { ShieldCheck, Mail, Lock } from 'lucide-react';
-import Navbar from '../../components/Navbar.tsx';
 
 const AdminLogin: React.FC = () => {
   const [email, setEmail] = useState('admin@smartcivic.tech');
@@ -33,9 +32,17 @@ const AdminLogin: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-4">
-      <Navbar />
-      
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-4 relative">
+
+      {/* Clickable SmartCivic logo */}
+      <div
+        onClick={() => navigate('/home')}
+        className="absolute top-6 left-20 flex items-center space-x-2 z-50 cursor-pointer"
+      >
+        <ShieldCheck className="text-teal-400 h-6 w-6" />
+        <span className="text-xl font-bold text-cyan-400">SmartCivic</span>
+      </div>
+
       {/* Background Effects */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="blob absolute top-20 left-10 w-72 h-72 bg-gradient-to-r from-teal-400/10 to-cyan-400/10 rounded-full morph"></div>

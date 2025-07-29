@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import Navbar from '../../components/Navbar';
+import { Pencil, Trash2, ShieldCheck } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface Citizen {
   name: string;
@@ -13,6 +14,7 @@ const UserManagement: React.FC = () => {
   const [citizens, setCitizens] = useState<Citizen[]>([]);
   const [editIndex, setEditIndex] = useState<number | null>(null);
   const [editData, setEditData] = useState<Partial<Citizen>>({});
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchCitizens();
@@ -67,7 +69,12 @@ const UserManagement: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      <Navbar />
+      {/* Top Bar */}
+      <div className="absolute top-6 left-20 flex items-center space-x-2 z-50 cursor-pointer" onClick={() => navigate('/home')}>
+        <ShieldCheck className="text-teal-400 h-6 w-6" />
+        <span className="text-xl font-bold text-cyan-400">SmartCivic</span>
+      </div>
+
       <div className="pt-24 px-6 max-w-6xl mx-auto">
         <h1 className="text-3xl font-bold text-white mb-4">Citizen Management</h1>
         <p className="text-gray-400 mb-8">List of all registered citizens</p>

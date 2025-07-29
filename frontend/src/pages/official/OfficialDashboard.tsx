@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import Navbar from '../../components/Navbar';
-import { FileText, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
+import { FileText, Clock, CheckCircle, AlertTriangle, ShieldCheck, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const OfficialDashboard: React.FC = () => {
   const [complaints, setComplaints] = useState<any[]>([]);
@@ -9,6 +9,10 @@ const OfficialDashboard: React.FC = () => {
   const [editedDescriptions, setEditedDescriptions] = useState<{ [key: string]: string }>({});
   const [editedAddresses, setEditedAddresses] = useState<{ [key: string]: string }>({});
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  const navigate = useNavigate();
 
   const token = localStorage.getItem('token');
   const department = localStorage.getItem('department') || 'Unknown';
@@ -28,6 +32,12 @@ const OfficialDashboard: React.FC = () => {
     fetchComplaints();
   }, [token, department]);
 
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate('/home');
+    window.location.reload();
+  };
+
   const handleChange = (id: string, field: 'status' | 'description' | 'address', value: string) => {
     if (field === 'status') {
       setEditedStatuses(prev => ({ ...prev, [id]: value }));
@@ -41,10 +51,9 @@ const OfficialDashboard: React.FC = () => {
   const handleSave = async (id: string, field: 'status' | 'description' | 'address') => {
     const value =
       field === 'status' ? editedStatuses[id] :
-      field === 'description' ? editedDescriptions[id] :
-      editedAddresses[id];
+        field === 'description' ? editedDescriptions[id] :
+          editedAddresses[id];
 
-    // 🔐 Prompt the user to confirm
     const userInput = window.prompt(`Type 'save' to confirm updating the ${field} of Complaint ID ${id}`);
     if (!userInput || userInput.trim().toLowerCase() !== 'save') {
       alert('Update canceled. You must type "save" to confirm.');
@@ -62,7 +71,6 @@ const OfficialDashboard: React.FC = () => {
         prev.map(c => (c.complaint_id === id ? { ...c, [field]: value } : c))
       );
 
-      // Clear local edits
       if (field === 'status') {
         const updated = { ...editedStatuses };
         delete updated[id];
@@ -84,13 +92,40 @@ const OfficialDashboard: React.FC = () => {
     }
   };
 
+  const openModal = (url: string) => {
+    setSelectedImage(url);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedImage(null);
+  };
+
   const filteredComplaints = complaints.filter(c =>
     searchQuery.trim() === '' || c.complaint_id.toString().includes(searchQuery.trim())
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      <Navbar />
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative">
+
+      {/* Top Bar */}
+      <div className="absolute top-6 left-20 flex items-center space-x-2 z-50 cursor-pointer" onClick={() => navigate('/home')}>
+        <ShieldCheck className="text-teal-400 h-6 w-6" />
+        <span className="text-xl font-bold text-cyan-400">SmartCivic</span>
+      </div>
+
+      <div className="absolute top-20 right-20 z-50">
+        <button
+          onClick={handleLogout}
+          className="glass-dark px-4 py-2 rounded text-red-400 hover:bg-red-400 hover:text-white transition-all text-sm flex items-center space-x-2"
+        >
+          <LogOut className="h-4 w-4" />
+          <span>Logout</span>
+        </button>
+      </div>
+
+      {/* Main Content */}
       <div className="relative pt-24 pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="mb-8">
@@ -173,6 +208,15 @@ const OfficialDashboard: React.FC = () => {
                       <p>Complaint ID: <span className="text-teal-400">{id}</span></p>
                     </div>
 
+                    {c.image_url && (
+                      <button
+                        onClick={() => openModal(c.image_url)}
+                        className="mt-2 bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+                      >
+                        Show Image
+                      </button>
+                    )}
+
                     {/* Editable Fields */}
                     <div className="mt-4 space-y-4">
                       <div>
@@ -239,6 +283,25 @@ const OfficialDashboard: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Image Modal */}
+      {isModalOpen && selectedImage && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex justify-center items-center z-50">
+          <div className="relative max-w-2xl w-full bg-slate-800 border border-gray-600 rounded-2xl p-4 shadow-lg">
+            <button
+              onClick={closeModal}
+              className="absolute top-3 right-3 bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-full text-sm font-medium shadow transition-all"
+            >
+              &times;
+            </button>
+            <img
+              src={selectedImage}
+              alt="Complaint"
+              className="w-full h-auto rounded-xl mt-2"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

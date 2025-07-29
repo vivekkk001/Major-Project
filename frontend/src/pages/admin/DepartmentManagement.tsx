@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import Navbar from '../../components/Navbar';
+import { ShieldCheck } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { unparse } from "papaparse";
 
 interface Complaint {
@@ -21,6 +22,8 @@ const DepartmentManagement: React.FC = () => {
   const [editData, setEditData] = useState<Partial<Complaint>>({});
   const [filterDepartment, setFilterDepartment] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+  const [popupImage, setPopupImage] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchComplaints();
@@ -93,7 +96,12 @@ const DepartmentManagement: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      <Navbar />
+      {/* Top Bar */}
+      <div className="absolute top-6 left-20 flex items-center space-x-2 z-50 cursor-pointer" onClick={() => navigate('/home')}>
+        <ShieldCheck className="text-teal-400 h-6 w-6" />
+        <span className="text-xl font-bold text-cyan-400">SmartCivic</span>
+      </div>
+
       <div className="pt-24 px-6 max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold text-white mb-4">All Complaints</h1>
         <p className="text-gray-400 mb-4">Detailed complaint information for all citizens</p>
@@ -153,9 +161,12 @@ const DepartmentManagement: React.FC = () => {
                     )}
                   </td>
                   <td className="px-6 py-4 text-white">
-                    <a href={c.image_url} target="_blank" rel="noopener noreferrer" className="text-teal-300 hover:underline">
+                    <button
+                      onClick={() => setPopupImage(c.image_url)}
+                      className="text-teal-300 hover:underline"
+                    >
                       View
-                    </a>
+                    </button>
                   </td>
                   <td className="px-6 py-4 text-white">
                     {editIndex === index ? (
@@ -229,6 +240,21 @@ const DepartmentManagement: React.FC = () => {
           </table>
         </div>
       </div>
+
+      {/* Image popup modal */}
+      {popupImage && (
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center">
+          <div className="relative bg-slate-900 rounded-lg shadow-lg p-4 max-w-3xl w-full">
+            <button
+              onClick={() => setPopupImage(null)}
+              className="absolute top-2 right-2 text-white bg-red-500 hover:bg-red-600 rounded-full p-1"
+            >
+              &times;
+            </button>
+            <img src={popupImage} alt="Complaint" className="rounded w-full max-h-[80vh] object-contain" />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
