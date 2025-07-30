@@ -88,7 +88,7 @@ const AdminLogin: React.FC = () => {
             type="submit"
             className="w-full bg-teal-500 hover:bg-teal-600 text-white py-3 rounded-lg font-semibold transition-all shadow-lg hover:shadow-teal-500/25"
           >
-            Login as Admin
+            Login
           </button>
         </form>
       </div>

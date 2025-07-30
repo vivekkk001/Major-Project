@@ -204,7 +204,7 @@ const OfficialLogin: React.FC = () => {
                 disabled={loading}
                 className="w-full glass py-3 px-4 rounded-lg text-orange-400 hover:bg-orange-400 hover:text-white transition-all hover-lift ripple font-medium border border-orange-400/30 hover:border-orange-400 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'Accessing...' : 'Login as Departmental'}
+                {loading ? 'Accessing...' : 'Login'}
               </button>
             </form>
 

@@ -141,7 +141,7 @@ const UserManagement: React.FC = () => {
                       </>
                     ) : (
                       <>
-                        <button onClick={() => handleEditClick(index)} className="text-teal-400 hover:underline">Edit</button>
+                        {/* <button onClick={() => handleEditClick(index)} className="text-teal-400 hover:underline">Edit</button> */}
                         <button onClick={() => handleDelete(citizen.email)} className="text-red-400 hover:underline">Delete</button>
                       </>
                     )}

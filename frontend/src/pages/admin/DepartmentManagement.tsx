@@ -224,7 +224,7 @@ const DepartmentManagement: React.FC = () => {
                       </>
                     ) : (
                       <>
-                        <button onClick={() => handleEditClick(index)} className="text-blue-400 hover:underline">Edit</button>
+                        {/* <button onClick={() => handleEditClick(index)} className="text-blue-400 hover:underline">Edit</button> */}
                         <button onClick={() => handleDelete(c.id)} className="text-red-400 hover:underline">Delete</button>
                       </>
                     )}

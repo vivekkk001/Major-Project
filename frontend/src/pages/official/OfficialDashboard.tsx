@@ -220,38 +220,40 @@ const OfficialDashboard: React.FC = () => {
                     {/* Editable Fields */}
                     <div className="mt-4 space-y-4">
                       <div>
-                        <label className="block text-sm text-gray-300 mb-1">Update Description</label>
+                        <label className="block text-sm text-gray-300 mb-1">Description</label>
                         <textarea
                           value={desc}
+                          readOnly
                           onChange={e => handleChange(id, 'description', e.target.value)}
                           rows={2}
                           className="w-full rounded bg-slate-700 border border-gray-600 text-white p-2"
                         />
-                        {desc !== c.description && (
+                        {/* {desc !== c.description && (
                           <button
                             onClick={() => handleSave(id, 'description')}
                             className="mt-2 bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
                           >
                             Save Description
                           </button>
-                        )}
+                        )} */}
                       </div>
                       <div>
-                        <label className="block text-sm text-gray-300 mb-1">Update Address</label>
+                        <label className="block text-sm text-gray-300 mb-1">Address</label>
                         <textarea
                           value={addr}
+                          readOnly
                           onChange={e => handleChange(id, 'address', e.target.value)}
                           rows={2}
                           className="w-full rounded bg-slate-700 border border-gray-600 text-white p-2"
                         />
-                        {addr !== c.address && (
+                        {/* {addr !== c.address && (
                           <button
                             onClick={() => handleSave(id, 'address')}
                             className="mt-2 bg-yellow-600 text-white px-3 py-1 rounded hover:bg-yellow-700"
                           >
                             Save Address
                           </button>
-                        )}
+                        )} */}
                       </div>
                       <div>
                         <label className="block text-sm text-gray-300 mb-1">Update Status</label>
