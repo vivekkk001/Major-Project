@@ -20,7 +20,7 @@ const OfficialDashboard: React.FC = () => {
   useEffect(() => {
     const fetchComplaints = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/complaints/all`, {
+        const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/complaints/all`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const filtered = res.data.filter((c: any) => c.department === department);
@@ -62,7 +62,7 @@ const OfficialDashboard: React.FC = () => {
 
     try {
       await axios.put(
-        `http://localhost:5000/api/complaints/${id}/${field}`,
+        `${import.meta.env.VITE_API_BASE_URL}/api/complaints/${id}/${field}`,
         { [field]: value },
         { headers: { Authorization: `Bearer ${token}` } }
       );

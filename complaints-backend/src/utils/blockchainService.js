@@ -1,4 +1,3 @@
-// src/utils/blockchainService.js
 const { ethers } = require("ethers");
 const fs = require("fs");
 const path = require("path");

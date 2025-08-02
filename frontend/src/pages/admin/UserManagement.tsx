@@ -22,7 +22,7 @@ const UserManagement: React.FC = () => {
 
   const fetchCitizens = () => {
     axios
-      .get('http://localhost:5000/api/admin/citizens')
+      .get(`${import.meta.env.VITE_API_BASE_URL}/api/admin/citizens`)
       .then((res) => setCitizens(res.data.citizens || []))
       .catch((err) => console.error('Failed to fetch citizens:', err));
   };
@@ -44,7 +44,7 @@ const UserManagement: React.FC = () => {
     }
 
     try {
-      await axios.put(`http://localhost:5000/api/admin/citizens/${editData.email}`, editData);
+      await axios.put(`${import.meta.env.VITE_API_BASE_URL}/api/admin/citizens/${editData.email}`, editData);
       setEditIndex(null);
       fetchCitizens();
     } catch (error) {
@@ -60,7 +60,7 @@ const UserManagement: React.FC = () => {
     }
 
     try {
-      await axios.delete(`http://localhost:5000/api/admin/citizens/${email}`);
+      await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/api/admin/citizens/${email}`);
       fetchCitizens();
     } catch (error) {
       console.error("Error deleting citizen:", error);

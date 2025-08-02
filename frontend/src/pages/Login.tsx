@@ -22,9 +22,20 @@ const Login: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:5000/api/citizen/login', formData, {
+      const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/citizen/login`, formData, {
         withCredentials: true
       });
+
+      console.log('Login response:', res.data);
+
+      // Store token and user info if available
+      if (res.data.token) {
+        localStorage.setItem('token', res.data.token);
+        if (res.data.user) {
+          localStorage.setItem('email', res.data.user.email || '');
+          localStorage.setItem('userId', res.data.user._id || '');
+        }
+      }
 
       alert(res.data.message || 'Login successful!');
       navigate('/complaint');
@@ -161,7 +172,6 @@ const Login: React.FC = () => {
                 <Link to="/admin/login" className="text-xs text-teal-400 hover:text-teal-300 transition-colors">
                   Admin Login
                 </Link>
-
               </div>
             </div>
           </div>

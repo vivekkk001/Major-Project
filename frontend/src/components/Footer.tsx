@@ -80,16 +80,18 @@ const Footer: React.FC = () => {
         </div>
 
         {/* Bottom Section */}
+        {/* Bottom Section */}
         <div className="border-t border-slate-800 mt-8 pt-8 flex flex-col md:flex-row items-center justify-between">
           <p className="text-gray-400 text-sm">
             © 2024 SmartCivic. All rights reserved.
           </p>
           <div className="flex space-x-6 mt-4 md:mt-0">
-            <a href="#" className="text-gray-400 hover:text-teal-400 transition-colors text-sm">Privacy Policy</a>
-            <a href="#" className="text-gray-400 hover:text-teal-400 transition-colors text-sm">Terms of Service</a>
-            <a href="#" className="text-gray-400 hover:text-teal-400 transition-colors text-sm">Support</a>
+            <a href="/privacy-policy" className="text-gray-400 hover:text-teal-400 transition-colors text-sm">Privacy Policy</a>
+            <a href="/terms-of-service" className="text-gray-400 hover:text-teal-400 transition-colors text-sm">Terms of Service</a>
+            <a href="/support" className="text-gray-400 hover:text-teal-400 transition-colors text-sm">Support</a>
           </div>
         </div>
+
       </div>
     </footer>
   );

@@ -165,7 +165,7 @@ const ComplaintForm = () => {
     formData.append('longitude', location.lng!.toString());
 
     try {
-      const res = await axios.post('http://localhost:5000/api/complaints', formData, {
+      const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/complaints`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         withCredentials: true
       });
@@ -186,10 +186,10 @@ const ComplaintForm = () => {
       <Navbar />
       <div className="max-w-2xl mx-auto px-6 py-24">
         <div className="glass border border-gray-700 p-8 rounded-2xl shadow-xl">
-          <h2 className="text-3xl font-bold mb-6">📢 File a Complaint</h2>
+          <h2 className="text-3xl font-bold mb-6">File a Complaint</h2>
 
           {message && (
-            <div className={`mb-6 px-4 py-3 rounded ${message.includes('✅') ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'}`}>
+            <div className={`mb-6 px-4 py-3 rounded ${message.includes('') ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'}`}>
               {message}
             </div>
           )}

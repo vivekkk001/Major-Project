@@ -39,7 +39,8 @@ const Navbar: React.FC = () => {
       if (!token) return;
 
       try {
-        const res = await fetch('http://localhost:5000/api/citizen/me', {
+        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/citizen/me`, 
+        {
           headers: {
             Authorization: `Bearer ${token}`,
           },

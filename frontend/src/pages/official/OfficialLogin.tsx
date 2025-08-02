@@ -32,7 +32,7 @@ const OfficialLogin: React.FC = () => {
   useEffect(() => {
     const fetchDepartments = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/departments');
+        const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/departments`);
         const data = res.data;
 
         if (Array.isArray(data)) {
@@ -65,7 +65,7 @@ const OfficialLogin: React.FC = () => {
     setLoading(true);
 
     try {
-      const res = await axios.post("http://localhost:5000/api/official/login", {
+      const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/official/login`, {
         official_id: formData.official_id,
         password: formData.password,
         department: formData.department

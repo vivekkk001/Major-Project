@@ -31,7 +31,7 @@ const DepartmentManagement: React.FC = () => {
 
   const fetchComplaints = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/admin/all-complaints');
+      const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/admin/all-complaints`);
       const sorted = (res.data.complaints || []).sort((a: Complaint, b: Complaint) => a.id - b.id);
       setComplaints(sorted);
     } catch (err) {
@@ -56,7 +56,7 @@ const DepartmentManagement: React.FC = () => {
     }
 
     try {
-      await axios.put(`http://localhost:5000/api/admin/complaints/${editData.id}`, editData);
+      await axios.put(`${import.meta.env.VITE_API_BASE_URL}/api/admin/complaints/${editData.id}`, editData);
       setEditIndex(null);
       fetchComplaints();
     } catch (error) {
@@ -69,7 +69,7 @@ const DepartmentManagement: React.FC = () => {
     if (!confirm) return;
 
     try {
-      await axios.delete(`http://localhost:5000/api/admin/complaints/${id}`);
+      await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/api/admin/complaints/${id}`);
       fetchComplaints();
     } catch (error) {
       console.error("Error deleting complaint:", error);

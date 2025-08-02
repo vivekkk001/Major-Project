@@ -24,7 +24,7 @@ cloudinary.config({
 });
 
 
-// 📌 Complaint Submission Route
+// Complaint Submission Route
 router.post("/", verifyToken, upload.single("image"), async (req, res) => {
   try {
     const { description, latitude, longitude } = req.body;
@@ -254,7 +254,7 @@ router.put("/update-status", verifyToken, async (req, res) => {
       complaint: updateResult.rows[0]
     });
   } catch (error) {
-    console.error("❌ Error updating complaint status:", error);
+    console.error(" Error updating complaint status:", error);
     res.status(500).json({ message: "Internal Server Error", error: error.message });
   }
 });

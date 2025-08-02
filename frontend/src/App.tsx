@@ -9,6 +9,9 @@ import Signup from './pages/Signup';
 import ComplaintForm from './pages/ComplaintForm';
 import MyComplaints from './pages/MyComplaints';
 import CitizenProfile from './pages/CitizenProfile';
+import DeveloperPage from './pages/CustomerSupport';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
 import DepartmentManagement from './pages/admin/DepartmentManagement';
@@ -34,6 +37,9 @@ function App() {
           <Route path="/complaint" element={<ComplaintForm />} />
           <Route path="/my-complaints" element={<MyComplaints />} />
           <Route path="/profile" element={<CitizenProfile />} />
+          <Route path="/support" element={<DeveloperPage />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms-of-service" element={<TermsOfService />} />
           {/* Admin */}
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/departments" element={<DepartmentManagement />} />
