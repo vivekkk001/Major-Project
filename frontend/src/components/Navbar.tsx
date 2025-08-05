@@ -93,7 +93,7 @@ const Navbar: React.FC = () => {
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link to="/" className="text-gray-300 hover:text-teal-400 transition-colors">Home</Link>
+            <Link to="/home" className="text-gray-300 hover:text-teal-400 transition-colors">Home</Link>
             <Link to="/complaint" className="text-gray-300 hover:text-teal-400 transition-colors">File Complaint</Link>
             <Link to="/my-complaints" className="text-gray-300 hover:text-teal-400 transition-colors flex items-center space-x-1">
               <BarChart3 className="h-4 w-4" />
