@@ -106,24 +106,51 @@ const OfficialDashboard: React.FC = () => {
     searchQuery.trim() === '' || c.complaint_id.toString().includes(searchQuery.trim())
   );
 
+  // Generate floating particles (same as home page)
+  const particles = Array.from({ length: 50 }, (_, i) => (
+    <div
+      key={i}
+      className="particle"
+      style={{
+        left: `${Math.random() * 100}%`,
+        width: `${Math.random() * 4 + 2}px`,
+        height: `${Math.random() * 4 + 2}px`,
+        animationDelay: `${Math.random() * 15}s`,
+        animationDuration: `${Math.random() * 10 + 10}s`
+      }}
+    />
+  ));
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden">
+
+      {/* Animated Background - Same as Home Page */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        {particles}
+        <div className="blob absolute top-20 left-10 w-72 h-72 bg-gradient-to-r from-teal-400/20 to-cyan-400/20 rounded-full morph"></div>
+        <div className="blob absolute bottom-20 right-10 w-96 h-96 bg-gradient-to-r from-blue-400/10 to-purple-400/10 rounded-full morph"></div>
+        <div className="blob absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-teal-400/5 to-cyan-400/5 rounded-full morph"></div>
+      </div>
 
       {/* Top Bar */}
-      <div className="absolute top-6 left-20 flex items-center space-x-2 z-50 cursor-pointer" onClick={() => navigate('/home')}>
-        <ShieldCheck className="text-teal-400 h-6 w-6" />
-        <span className="text-xl font-bold text-cyan-400">SmartCivic</span>
-      </div>
+<div className="fixed top-0 left-0 w-full z-50 bg-slate-900/60 backdrop-blur-md border-b border-slate-700 px-6 py-4 flex items-center justify-between">
+  <div
+    className="flex items-center space-x-2 cursor-pointer"
+    onClick={() => navigate('/home')}
+  >
+    <ShieldCheck className="text-teal-400 h-6 w-6" />
+    <span className="text-xl font-bold text-cyan-400">SmartCivic</span>
+  </div>
+  
+  <button
+    onClick={handleLogout}
+    className="glass px-4 py-2 rounded text-red-400 hover:bg-red-400 hover:text-white transition-all text-sm flex items-center space-x-2"
+  >
+    <LogOut className="h-4 w-4" />
+    <span>Logout</span>
+  </button>
+</div>
 
-      <div className="absolute top-20 right-20 z-50">
-        <button
-          onClick={handleLogout}
-          className="glass-dark px-4 py-2 rounded text-red-400 hover:bg-red-400 hover:text-white transition-all text-sm flex items-center space-x-2"
-        >
-          <LogOut className="h-4 w-4" />
-          <span>Logout</span>
-        </button>
-      </div>
 
       {/* Main Content */}
       <div className="relative pt-24 pb-20 px-4 sm:px-6 lg:px-8">

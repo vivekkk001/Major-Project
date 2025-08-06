@@ -253,7 +253,7 @@ const ComplaintForm = () => {
             <div className="space-y-4">
               <label className="text-lg font-medium text-white flex items-center space-x-2">
                 <Camera className="h-5 w-5" />
-                <span>Capture Evidence</span>
+                <span>Capture Image</span>
                 <span className="text-red-400">*</span>
               </label>
 

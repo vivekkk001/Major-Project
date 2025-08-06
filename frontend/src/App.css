@@ -177,3 +177,6 @@
   background: linear-gradient(45deg, #14b8a6, #06b6d4);
   box-shadow: 0 0 12px rgba(20, 184, 166, 0.6);
 }
+.glass {
+  @apply bg-slate-800/30 backdrop-blur-md;
+}

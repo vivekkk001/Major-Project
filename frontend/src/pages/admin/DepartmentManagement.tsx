@@ -94,8 +94,32 @@ const DepartmentManagement: React.FC = () => {
     (!filterStatus || c.status === filterStatus)
   );
 
+  // Generate floating particles (same as home page)
+  const particles = Array.from({ length: 50 }, (_, i) => (
+    <div
+      key={i}
+      className="particle"
+      style={{
+        left: `${Math.random() * 100}%`,
+        width: `${Math.random() * 4 + 2}px`,
+        height: `${Math.random() * 4 + 2}px`,
+        animationDelay: `${Math.random() * 15}s`,
+        animationDuration: `${Math.random() * 10 + 10}s`
+      }}
+    />
+  ));
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden">
+
+      {/* Animated Background - Same as Home Page */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        {particles}
+        <div className="blob absolute top-20 left-10 w-72 h-72 bg-gradient-to-r from-teal-400/20 to-cyan-400/20 rounded-full morph"></div>
+        <div className="blob absolute bottom-20 right-10 w-96 h-96 bg-gradient-to-r from-blue-400/10 to-purple-400/10 rounded-full morph"></div>
+        <div className="blob absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-teal-400/5 to-cyan-400/5 rounded-full morph"></div>
+      </div>
+      
       {/* Top Bar */}
       <div className="absolute top-6 left-20 flex items-center space-x-2 z-50 cursor-pointer" onClick={() => navigate('/home')}>
         <ShieldCheck className="text-teal-400 h-6 w-6" />
@@ -106,7 +130,8 @@ const DepartmentManagement: React.FC = () => {
         <h1 className="text-3xl font-bold text-white mb-4">All Complaints</h1>
         <p className="text-gray-400 mb-4">Detailed complaint information for all citizens</p>
 
-        <div className="flex space-x-4 mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-2 sm:space-y-0 mb-4">
+
           <input
             type="text"
             placeholder="Filter by Department"
