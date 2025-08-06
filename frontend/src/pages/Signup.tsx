@@ -52,7 +52,7 @@ const Signup: React.FC = () => {
     }
 
     try {
-      await axios.post(`${API}/api/citizen/register`, {
+      await axios.post(`${API}/api/citizen/signup`, {
         name: formData.fullName,
         email: formData.email,
         phone: formData.phone,
