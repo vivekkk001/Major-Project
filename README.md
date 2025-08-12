@@ -18,7 +18,7 @@ A **user-friendly, feature-rich web application** designed to streamline municip
 - **Backend:** Node.js, Express.js  
 - **Database:** PostgreSQL  
 - **Cloud & DevOps:** GCP, Docker  
-- **Blockchain:** Hardhat, Ethers.js (for complaint tracking)  
+- **Blockchain:** Hardhat, Ethers.js
 
 ---
 
