@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   Menu, X, Shield, User, FileText, Settings,
   BarChart3, LogOut, Bell, ChevronDown
@@ -10,10 +10,43 @@ const Navbar: React.FC = () => {
   const [scrolled, setScrolled] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
+  const [userLoading, setUserLoading] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const token = localStorage.getItem('token');
+  // Listen to localStorage changes and location changes to update token state
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const newToken = localStorage.getItem('token');
+      setToken(newToken);
+    };
+
+    // Custom event listener for login/logout events
+    const handleAuthChange = () => {
+      const newToken = localStorage.getItem('token');
+      setToken(newToken);
+    };
+
+    // Listen to storage events (for different tabs)
+    window.addEventListener('storage', handleStorageChange);
+    // Listen to custom auth events (for same tab)
+    window.addEventListener('authChange', handleAuthChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('authChange', handleAuthChange);
+    };
+  }, []);
+
+  // Check token on location change
+  useEffect(() => {
+    const newToken = localStorage.getItem('token');
+    if (newToken !== token) {
+      setToken(newToken);
+    }
+  }, [location, token]);
 
   // Scroll effect
   useEffect(() => {
@@ -33,14 +66,18 @@ const Navbar: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Fetch user profile
+  // Fetch user profile whenever token changes
   useEffect(() => {
     const fetchUser = async () => {
-      if (!token) return;
+      if (!token) {
+        setUser(null);
+        setUserLoading(false);
+        return;
+      }
 
+      setUserLoading(true);
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/citizen/me`, 
-        {
+        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/citizen/me`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -51,10 +88,17 @@ const Navbar: React.FC = () => {
           setUser(data);
         } else {
           setUser(null);
+          // If token is invalid, remove it
+          if (res.status === 401) {
+            localStorage.removeItem('token');
+            setToken(null);
+          }
         }
       } catch (err) {
         console.error('Error fetching user:', err);
         setUser(null);
+      } finally {
+        setUserLoading(false);
       }
     };
 
@@ -63,10 +107,12 @@ const Navbar: React.FC = () => {
 
   const handleLogout = () => {
     localStorage.clear();
+    setToken(null);
     setShowProfileMenu(false);
     setUser(null);
+    // Dispatch custom event to notify other components
+    window.dispatchEvent(new Event('authChange'));
     navigate('/home');
-    window.location.reload();
   };
 
   const getUserInitials = (name: string): string => {
@@ -100,12 +146,12 @@ const Navbar: React.FC = () => {
               <span>Track Issues</span>
             </Link>
 
-            {token && user ? (
+            {token ? (
               <div className="flex items-center space-x-4">
-                <button className="relative p-2 text-gray-400 hover:text-teal-400 transition-colors">
+                {/* <button className="relative p-2 text-gray-400 hover:text-teal-400 transition-colors">
                   <Bell className="h-5 w-5" />
                   <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
-                </button>
+                </button> */}
 
                 <div className="relative" ref={profileMenuRef}>
                   <button
@@ -113,9 +159,9 @@ const Navbar: React.FC = () => {
                     className="flex items-center space-x-2 text-teal-400 hover:text-white transition-colors group"
                   >
                     <div className="h-8 w-8 rounded-full bg-gradient-to-r from-teal-400 to-blue-500 flex items-center justify-center text-white text-sm font-semibold">
-                      {getUserInitials(user.name)}
+                      {user ? getUserInitials(user.name) : 'U'}
                     </div>
-                    <span className="hidden lg:block">{user.name}</span>
+                    <span className="hidden lg:block">{user ? user.name : 'User'}</span>
                     <ChevronDown className={`h-4 w-4 transition-transform ${showProfileMenu ? 'rotate-180' : ''}`} />
                   </button>
 
@@ -124,11 +170,11 @@ const Navbar: React.FC = () => {
                       <div className="p-4 bg-gradient-to-r from-teal-400/10 to-blue-500/10 border-b border-gray-700">
                         <div className="flex items-center space-x-3">
                           <div className="h-12 w-12 rounded-full bg-gradient-to-r from-teal-400 to-blue-500 flex items-center justify-center text-white font-semibold">
-                            {getUserInitials(user.name)}
+                            {user ? getUserInitials(user.name) : 'U'}
                           </div>
                           <div>
-                            <div className="text-white font-medium">{user.name}</div>
-                            <div className="text-gray-400 text-sm">{user.email}</div>
+                            <div className="text-white font-medium">{user ? user.name : 'User'}</div>
+                            <div className="text-gray-400 text-sm">{user ? user.email : 'Loading...'}</div>
                           </div>
                         </div>
                       </div>
@@ -173,20 +219,20 @@ const Navbar: React.FC = () => {
         {/* Mobile Menu */}
         <div className={`md:hidden transition-all duration-300 ${isOpen ? 'max-h-screen opacity-100 mt-4' : 'max-h-0 opacity-0 overflow-hidden'}`}>
           <div className="glass rounded-lg p-4 space-y-4">
-            <Link to="/" className="block text-gray-300 hover:text-teal-400 transition-colors py-2" onClick={() => setIsOpen(false)}>Home</Link>
+            <Link to="/home" className="block text-gray-300 hover:text-teal-400 transition-colors py-2" onClick={() => setIsOpen(false)}>Home</Link>
             <Link to="/complaint" className="block text-gray-300 hover:text-teal-400 transition-colors py-2" onClick={() => setIsOpen(false)}>File Complaint</Link>
             <Link to="/my-complaints" className="block text-gray-300 hover:text-teal-400 transition-colors py-2" onClick={() => setIsOpen(false)}>Track Issues</Link>
             <hr className="border-gray-700" />
 
-            {token && user ? (
+            {token ? (
               <>
                 <div className="flex items-center space-x-3 p-3 bg-gradient-to-r from-teal-400/10 to-blue-500/10 rounded-lg">
                   <div className="h-10 w-10 rounded-full bg-gradient-to-r from-teal-400 to-blue-500 flex items-center justify-center text-white font-semibold">
-                    {getUserInitials(user.name)}
+                    {user ? getUserInitials(user.name) : 'U'}
                   </div>
                   <div>
-                    <div className="text-white font-medium">{user.name}</div>
-                    <div className="text-gray-400 text-sm">{user.email}</div>
+                    <div className="text-white font-medium">{user ? user.name : 'User'}</div>
+                    <div className="text-gray-400 text-sm">{user ? user.email : 'Loading...'}</div>
                   </div>
                 </div>
 

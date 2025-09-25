@@ -3,6 +3,8 @@ import axios from 'axios';
 import { Camera, Loader, MapPin, Navigation, Send, AlertCircle, X, RotateCcw } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { useNavigate } from 'react-router-dom';
+import ReCAPTCHA from 'react-google-recaptcha';
+
 
 const ComplaintForm = () => {
   const [description, setDescription] = useState('');
@@ -18,6 +20,8 @@ const ComplaintForm = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const navigate = useNavigate();
+
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   useEffect(() => {
     if (videoRef.current && stream) {
@@ -150,6 +154,11 @@ const ComplaintForm = () => {
       setMessage('Please fill all required fields.');
       return;
     }
+    if (!captchaToken) {
+      setMessage('Please verify the CAPTCHA!');
+      return;
+    }
+
 
     setLoading(true);
     setMessage('');
@@ -199,7 +208,7 @@ const ComplaintForm = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden">
       <Navbar />
-      
+
       {/* Animated Background - Same as Home Page */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         {particles}
@@ -220,11 +229,10 @@ const ComplaintForm = () => {
           </div>
 
           {message && (
-            <div className={`mb-6 px-4 py-3 rounded-lg glass border ${
-              message.includes('successfully') || message.includes('fetched') 
-                ? 'border-green-400/30 bg-green-400/10 text-green-300' 
+            <div className={`mb-6 px-4 py-3 rounded-lg glass border ${message.includes('successfully') || message.includes('fetched')
+                ? 'border-green-400/30 bg-green-400/10 text-green-300'
                 : 'border-red-400/30 bg-red-400/10 text-red-300'
-            }`}>
+              }`}>
               <div className="flex items-center space-x-2">
                 <AlertCircle className="h-4 w-4 flex-shrink-0" />
                 <span>{message}</span>
@@ -318,7 +326,7 @@ const ComplaintForm = () => {
                     </button>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none"></div>
                   </div>
-                  
+
                   {isBlurry && (
                     <div className="glass border border-yellow-400/30 bg-yellow-400/10 p-3 rounded-lg">
                       <p className="text-yellow-300 text-sm flex items-center gap-2">
@@ -327,7 +335,7 @@ const ComplaintForm = () => {
                       </p>
                     </div>
                   )}
-                  
+
                   <button
                     type="button"
                     onClick={retakePhoto}
@@ -348,7 +356,7 @@ const ComplaintForm = () => {
                 <span>Location</span>
                 <span className="text-red-400">*</span>
               </label>
-              
+
               <button
                 type="button"
                 onClick={handleLocation}
@@ -362,7 +370,7 @@ const ComplaintForm = () => {
                 )}
                 {locationLoading ? 'Getting Location...' : 'Get Current Location'}
               </button>
-              
+
               {location.lat && location.lng && (
                 <div className="glass border border-teal-400/30 bg-teal-400/10 p-4 rounded-lg">
                   <div className="flex items-center space-x-3 text-teal-300">
@@ -377,6 +385,15 @@ const ComplaintForm = () => {
                 </div>
               )}
             </div>
+            <div className="flex justify-center">
+              <ReCAPTCHA
+                sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY!}
+                onChange={(token) => setCaptchaToken(token)}
+                onExpired={() => setCaptchaToken(null)}
+                theme="dark"
+              />
+            </div>
+
 
             {/* Submit Button */}
             <button

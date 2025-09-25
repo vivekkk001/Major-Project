@@ -10,6 +10,8 @@ const Login: React.FC = () => {
     email: '',
     password: ''
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -17,10 +19,15 @@ const Login: React.FC = () => {
       ...formData,
       [e.target.name]: e.target.value
     });
+    // Clear error when user starts typing
+    if (error) setError('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
+    setError('');
+
     try {
       const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/citizen/login`, formData, {
         withCredentials: true
@@ -35,14 +42,21 @@ const Login: React.FC = () => {
           localStorage.setItem('email', res.data.user.email || '');
           localStorage.setItem('userId', res.data.user._id || '');
         }
-      }
 
-      alert(res.data.message || 'Login successful!');
-      navigate('/complaint');
+        // 🔥 CRITICAL: Dispatch the authChange event to notify navbar
+        window.dispatchEvent(new Event('authChange'));
+        
+        // Small delay to ensure navbar updates before navigation
+        setTimeout(() => {
+          navigate('/complaint');
+        }, 100);
+      }
     } catch (err: any) {
       const msg = err.response?.data?.message || 'Login failed. Please check your credentials.';
-      alert(msg);
+      setError(msg);
       console.error('Login error:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -70,6 +84,15 @@ const Login: React.FC = () => {
 
           {/* Login Form */}
           <div className="glass rounded-2xl p-8 hover-lift">
+            {/* Error Message */}
+            {error && (
+              <div className="mb-6 p-4 rounded-lg bg-red-400/10 border border-red-400/30 text-red-300">
+                <div className="flex items-center">
+                  <span>{error}</span>
+                </div>
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Email Input */}
               <div>
@@ -89,6 +112,7 @@ const Login: React.FC = () => {
                     className="glass-dark w-full pl-10 pr-4 py-3 rounded-lg border border-gray-600 focus:border-teal-400 focus:outline-none transition-colors text-white placeholder-gray-400"
                     placeholder="Enter your email"
                     required
+                    disabled={loading}
                   />
                 </div>
               </div>
@@ -111,11 +135,13 @@ const Login: React.FC = () => {
                     className="glass-dark w-full pl-10 pr-12 py-3 rounded-lg border border-gray-600 focus:border-teal-400 focus:outline-none transition-colors text-white placeholder-gray-400"
                     placeholder="Enter your password"
                     required
+                    disabled={loading}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    disabled={loading}
                   >
                     {showPassword ? (
                       <EyeOff className="h-5 w-5 text-gray-400 hover:text-teal-400 transition-colors" />
@@ -133,6 +159,7 @@ const Login: React.FC = () => {
                     type="checkbox"
                     id="remember"
                     className="h-4 w-4 text-teal-400 focus:ring-teal-400 border-gray-600 rounded bg-transparent"
+                    disabled={loading}
                   />
                   <label htmlFor="remember" className="ml-2 block text-sm text-gray-300">
                     Remember me
@@ -146,9 +173,10 @@ const Login: React.FC = () => {
               {/* Submit Button */}
               <button
                 type="submit"
-                className="w-full glass glow py-3 px-4 rounded-lg text-teal-400 hover:bg-teal-400 hover:text-white transition-all hover-lift ripple font-medium"
+                disabled={loading}
+                className="w-full glass glow py-3 px-4 rounded-lg text-teal-400 hover:bg-teal-400 hover:text-white transition-all hover-lift ripple font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Sign In
+                {loading ? 'Signing In...' : 'Sign In'}
               </button>
             </form>
 
@@ -177,6 +205,64 @@ const Login: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <style jsx>{`
+        .glass {
+          background: rgba(255, 255, 255, 0.05);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .glass-dark {
+          background: rgba(0, 0, 0, 0.2);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .glow {
+          box-shadow: 0 0 20px rgba(20, 184, 166, 0.1);
+        }
+
+        .glow:hover {
+          box-shadow: 0 0 30px rgba(20, 184, 166, 0.2);
+        }
+
+        .hover-lift:hover {
+          transform: translateY(-2px);
+        }
+
+        .ripple {
+          position: relative;
+          overflow: hidden;
+        }
+
+        .ripple:before {
+          content: "";
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 0;
+          height: 0;
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.1);
+          transform: translate(-50%, -50%);
+          transition: width 0.6s, height 0.6s;
+        }
+
+        .ripple:hover:before {
+          width: 300px;
+          height: 300px;
+        }
+
+        .blob {
+          animation: morph 8s ease-in-out infinite;
+        }
+
+        @keyframes morph {
+          0%, 100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; transform: rotate(0deg); }
+          50% { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; transform: rotate(180deg); }
+        }
+      `}</style>
     </div>
   );
 };

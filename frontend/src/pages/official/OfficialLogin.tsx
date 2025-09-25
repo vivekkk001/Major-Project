@@ -22,11 +22,11 @@ const OfficialLogin: React.FC = () => {
   const fallbackDepartments: Department[] = [
     { id: 1, name: 'Parks and Recreation' },
     { id: 2, name: 'Road Maintenance' },
-    { id: 3, name: 'Public Transportation' },
-    { id: 4, name: 'Sewage' },
-    { id: 5, name: 'Electrical Department' },
-    { id: 6, name: 'Sanitation' },
-    { id: 7, name: 'Water Supply' }
+    { id: 3, name: 'Water Supply' },
+    { id: 4, name: 'Sanitation' },
+    { id: 5, name: 'Sewage' },
+    { id: 6, name: 'Public Transportation' },
+    { id: 7, name: 'Electrical Department' }
   ];
 
   useEffect(() => {

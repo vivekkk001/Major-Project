@@ -7,11 +7,11 @@ interface TypingTextProps {
   onComplete?: () => void;
 }
 
-const TypingText: React.FC<TypingTextProps> = ({ 
-  text, 
-  speed = 100, 
-  className = '', 
-  onComplete 
+const TypingText: React.FC<TypingTextProps> = ({
+  text,
+  speed = 100,
+  className = '',
+  onComplete
 }) => {
   const [displayText, setDisplayText] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);

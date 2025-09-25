@@ -89,7 +89,7 @@ const Home: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden">
       <Navbar />
-      
+
       {/* Animated Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         {particles}
@@ -106,7 +106,7 @@ const Home: React.FC = () => {
               <Shield className="h-16 w-16 text-teal-400 mx-auto float" />
               <div className="absolute inset-0 rounded-full bg-teal-400 opacity-20 blur-lg"></div>
             </div>
-            
+
             <h1 className="text-5xl md:text-5xl font-bold mb-6 gradient-text">
               AI-Powered Smart City Grievance Redressal System
             </h1>
@@ -117,7 +117,7 @@ const Home: React.FC = () => {
 
             {/* File Complaint Button - Prominently Displayed */}
             <div className="flex justify-center mb-8">
-              <Link 
+              <Link
                 to="/Login"
                 className="glass glow px-10 py-5 rounded-lg text-teal-400 hover:bg-teal-400 hover:text-white transition-all hover-lift ripple flex items-center space-x-3 text-xl font-medium"
               >
@@ -128,7 +128,7 @@ const Home: React.FC = () => {
             </div>
 
             {/* Login Buttons - Positioned Below */}
-            <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-8">
+            {/* <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-8">
               <Link 
                 to="/login"
                 className="glass px-6 py-3 rounded-lg text-gray-300 hover:text-teal-400 transition-all hover-lift flex items-center space-x-2"
@@ -144,7 +144,7 @@ const Home: React.FC = () => {
                 <Building2 className="h-5 w-5" />
                 <span>Official Login</span>
               </Link>
-            </div>
+            </div> */}
           </div>
         </div>
 
@@ -157,9 +157,9 @@ const Home: React.FC = () => {
       </section>
 
       {/* Features Carousel Section - Similar to Image Style */}
-      <section className="relative py-20 px-4 sm:px-6 lg:px-8">
+      <section className="relative py-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
+          <div className="text-center mb-10">
             <h2 className="text-4xl font-bold text-white mb-4">Why SmartCivic is the Smarter Choice</h2>
             <p className="text-gray-400 text-lg max-w-2xl mx-auto">
               Our platform combines cutting-edge technology with user-friendly design to make civic engagement effortless.
@@ -174,12 +174,12 @@ const Home: React.FC = () => {
                 const isActive = index === currentSlide;
                 const isPrev = index === (currentSlide - 1 + features.length) % features.length;
                 const isNext = index === (currentSlide + 1) % features.length;
-                
+
                 let cardClass = "absolute w-80 h-80 transition-all duration-700 ease-in-out";
                 let zIndex = 1;
                 let transform = "";
                 let opacity = 0.3;
-                
+
                 if (isActive) {
                   cardClass += " z-30";
                   transform = "translateX(0) scale(1)";
@@ -251,11 +251,10 @@ const Home: React.FC = () => {
               <button
                 key={index}
                 onClick={() => setCurrentSlide(index)}
-                className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                  index === currentSlide 
-                    ? 'bg-teal-400 scale-125 shadow-lg shadow-teal-400/50' 
+                className={`w-3 h-3 rounded-full transition-all duration-300 ${index === currentSlide
+                    ? 'bg-teal-400 scale-125 shadow-lg shadow-teal-400/50'
                     : 'bg-gray-600 hover:bg-gray-500 hover:scale-110'
-                }`}
+                  }`}
               />
             ))}
           </div>
@@ -273,14 +272,14 @@ const Home: React.FC = () => {
               Join thousands of citizens who are already using SmartCivic to create positive change in their communities.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6">
-              <Link 
+              <Link
                 to="/signup"
                 className="glass-dark glow px-8 py-4 rounded-lg text-teal-400 hover:bg-teal-400 hover:text-white transition-all hover-lift ripple flex items-center space-x-2 text-lg font-medium"
               >
                 <span>Sign Up</span>
                 <ArrowRight className="h-5 w-5" />
               </Link>
-              <Link 
+              <Link
                 to="/login"
                 className="text-gray-300 hover:text-teal-400 transition-colors flex items-center space-x-2 text-lg"
               >

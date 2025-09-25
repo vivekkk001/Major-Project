@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { ShieldCheck } from 'lucide-react';
+import { ShieldCheck, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { unparse } from "papaparse";
 
@@ -119,12 +119,27 @@ const DepartmentManagement: React.FC = () => {
         <div className="blob absolute bottom-20 right-10 w-96 h-96 bg-gradient-to-r from-blue-400/10 to-purple-400/10 rounded-full morph"></div>
         <div className="blob absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-teal-400/5 to-cyan-400/5 rounded-full morph"></div>
       </div>
-      
+
       {/* Top Bar */}
-      <div className="absolute top-6 left-20 flex items-center space-x-2 z-50 cursor-pointer" onClick={() => navigate('/home')}>
-        <ShieldCheck className="text-teal-400 h-6 w-6" />
-        <span className="text-xl font-bold text-cyan-400">SmartCivic</span>
+      <div className="absolute top-6 left-6 flex items-center space-x-4 z-50">
+        {/* Back Arrow */}
+        <button
+          onClick={() => navigate(-1)}
+          className="text-cyan-400 hover:text-teal-300 transition-colors"
+        >
+          <ArrowLeft className="h-6 w-6" />
+        </button>
+
+        {/* Logo & Title */}
+        <div
+          className="flex items-center space-x-2 cursor"
+          onClick={() => navigate('')}
+        >
+          <ShieldCheck className="text-teal-400 h-6 w-6" />
+          <span className="text-xl font-bold text-cyan-400">SmartCivic</span>
+        </div>
       </div>
+
 
       <div className="pt-24 px-6 max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold text-white mb-4">All Complaints</h1>

@@ -7,7 +7,7 @@ const AdminDashboard: React.FC = () => {
 
   const handleLogout = () => {
     localStorage.clear();
-    navigate('/home');
+    navigate('/admin/login');
     window.location.reload();
   };
 
@@ -39,8 +39,8 @@ const AdminDashboard: React.FC = () => {
       {/* Top Bar */}
       <div className="fixed top-0 left-0 w-full z-50 bg-slate-900/60 backdrop-blur-md border-b border-slate-700 px-6 py-4 flex items-center justify-between">
         <div
-          className="flex items-center space-x-2 cursor-pointer"
-          onClick={() => navigate('/home')}
+          className="flex items-center space-x-2 cursor"
+          onClick={() => navigate('')}
         >
           <ShieldCheck className="text-teal-400 h-6 w-6" />
           <span className="text-xl font-bold text-cyan-400">SmartCivic</span>
