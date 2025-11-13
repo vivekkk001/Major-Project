@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import ProtectedRoute from './components/ProtectedRoute';
 
 // Pages
 import LandingPage from './pages/LandingPage';
@@ -29,26 +30,50 @@ function App() {
     <Router>
       <div className="App">
         <Routes>
-          {/* Public */}
+          {/* Public Routes */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/home" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
-          <Route path="/complaint" element={<ComplaintForm />} />
-          <Route path="/my-complaints" element={<MyComplaints />} />
-          <Route path="/profile" element={<CitizenProfile />} />
           <Route path="/support" element={<DeveloperPage />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-of-service" element={<TermsOfService />} />
-          {/* Admin */}
+
+          {/* Protected Citizen Routes */}
+          <Route
+            path="/complaint"
+            element={
+              <ProtectedRoute>
+                <ComplaintForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/my-complaints"
+            element={
+              <ProtectedRoute>
+                <MyComplaints />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <CitizenProfile />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Admin Routes - You might want to create AdminProtectedRoute later */}
+          <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/departments" element={<DepartmentManagement />} />
           <Route path="/admin/users" element={<UserManagement />} />
-          <Route path="/admin/login" element={<AdminLogin />} />
 
-          {/* Official */}
-          <Route path="/official/dashboard" element={<OfficialDashboard />} />
+          {/* Official Routes - You might want to create OfficialProtectedRoute later */}
           <Route path="/official/login" element={<OfficialLogin />} />
+          <Route path="/official/dashboard" element={<OfficialDashboard />} />
         </Routes>
       </div>
     </Router>

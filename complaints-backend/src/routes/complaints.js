@@ -29,6 +29,7 @@ router.post("/", verifyToken, upload.single("image"), async (req, res) => {
   try {
     const { description, latitude, longitude } = req.body;
     const citizen_name = req.user.name;
+    const citizen_email = req.user.email; // Use email for unique identification
 
     if (!req.file) {
       return res.status(400).json({ message: "Image file is required" });
@@ -74,13 +75,13 @@ router.post("/", verifyToken, upload.single("image"), async (req, res) => {
     const newComplaintId = counterRes.rows[0].last_used_id + 1;
     await pool.query("UPDATE complaint_counter SET last_used_id = $1 WHERE id = 1", [newComplaintId]);
 
-    // 🔹 Step 6: Insert complaint into DB
+    // 🔹 Step 6: Insert complaint into DB - Now using both name and email
     const newComplaint = await pool.query(
       `INSERT INTO complaints 
-        (complaint_id, citizen_name, department, description, image_url, latitude, longitude, address)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        (complaint_id, citizen_name, citizen_email, department, description, image_url, latitude, longitude, address)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING *`,
-      [newComplaintId, citizen_name, department, description, image_url, lat, lng, address]
+      [newComplaintId, citizen_name, citizen_email, department, description, image_url, lat, lng, address]
     );
 
     // 🔹 Step 7: Add complaint to blockchain
@@ -106,16 +107,6 @@ router.post("/", verifyToken, upload.single("image"), async (req, res) => {
   } catch (error) {
     console.error(" Error submitting complaint:", error);
     res.status(500).json({ message: "Internal Server Error", error: error.message });
-  }
-});
-// official dashboard Data of citizen
-router.get('/all', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM complaints ORDER BY complaint_id DESC');
-    res.json(result.rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Server error');
   }
 });
 
@@ -185,25 +176,33 @@ router.put("/:id/address", async (req, res) => {
   }
 });
 
-// Get complaints for logged-in officials by department
+// Get all complaints (for officials only) - with optional department filtering
 router.get("/all", verifyToken, async (req, res) => {
   try {
-    // Ensure the user is an official
-    if (req.user.role !== "official") {
-      return res.status(403).json({ message: "Unauthorized: Only officials can view complaints" });
+    // Check if user is an official
+    if (req.user.role !== 'official') {
+      return res.status(403).json({ message: "Unauthorized: Only officials can view all complaints" });
     }
 
-    const department = req.user.department;
+    // Officials can filter by department - use user's department if no query param
+    const department = req.query.department || req.user.department;
+    let complaints;
 
-    // Fetch complaints for the logged-in official's department only
-    const complaints = await pool.query(
-      "SELECT * FROM complaints WHERE department = $1 ORDER BY created_at DESC",
-      [department]
-    );
+    if (department) {
+      complaints = await pool.query(
+        "SELECT * FROM complaints WHERE department = $1 ORDER BY created_at DESC",
+        [department]
+      );
+    } else {
+      // Only super admins should see all departments
+      complaints = await pool.query(
+        "SELECT * FROM complaints ORDER BY created_at DESC"
+      );
+    }
 
     res.json(complaints.rows);
   } catch (error) {
-    console.error("Error fetching complaints:", error);
+    console.error("Error fetching all complaints:", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
@@ -259,49 +258,25 @@ router.put("/update-status", verifyToken, async (req, res) => {
   }
 });
 
-//  Get complaints for logged-in citizen
+// Get complaints for logged-in citizen - NOW USING EMAIL FOR FILTERING
 router.get("/my-complaints", verifyToken, async (req, res) => {
   try {
-    const citizenName = req.user.name;
+    console.log("=== MY COMPLAINTS ENDPOINT CALLED ===");
+    console.log("User from token:", req.user);
+    
+    const citizenEmail = req.user.email; // Use email instead of name
+    console.log("Filtering by citizen email:", citizenEmail);
 
     const complaints = await pool.query(
-      "SELECT * FROM complaints WHERE citizen_name = $1 ORDER BY created_at DESC",
-      [citizenName]
+      "SELECT * FROM complaints WHERE citizen_email = $1 ORDER BY created_at DESC",
+      [citizenEmail]
     );
+
+    console.log(`Found ${complaints.rows.length} complaints for email: ${citizenEmail}`);
 
     res.json(complaints.rows);
   } catch (error) {
     console.error("Error fetching complaints:", error);
-    res.status(500).json({ message: "Internal Server Error" });
-  }
-});
-
-// Get all complaints (for officials only)
-router.get("/all", verifyToken, async (req, res) => {
-  try {
-    // Check if user is an official
-    if (req.user.role !== 'official') {
-      return res.status(403).json({ message: "Unauthorized: Only officials can view all complaints" });
-    }
-
-    // Officials can filter by department
-    const { department } = req.query;
-    let complaints;
-
-    if (department) {
-      complaints = await pool.query(
-        "SELECT * FROM complaints WHERE department = $1 ORDER BY created_at DESC",
-        [department]
-      );
-    } else {
-      complaints = await pool.query(
-        "SELECT * FROM complaints ORDER BY created_at DESC"
-      );
-    }
-
-    res.json(complaints.rows);
-  } catch (error) {
-    console.error("Error fetching all complaints:", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 });

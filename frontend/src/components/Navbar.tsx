@@ -10,43 +10,67 @@ const Navbar: React.FC = () => {
   const [scrolled, setScrolled] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [user, setUser] = useState<any>(null);
-  const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
-  const [userLoading, setUserLoading] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userLoading, setUserLoading] = useState(true);
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Listen to localStorage changes and location changes to update token state
+  // Listen to auth changes
   useEffect(() => {
-    const handleStorageChange = () => {
-      const newToken = localStorage.getItem('token');
-      setToken(newToken);
-    };
-
-    // Custom event listener for login/logout events
     const handleAuthChange = () => {
-      const newToken = localStorage.getItem('token');
-      setToken(newToken);
+      // Check if user data is in localStorage (set by login component)
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        try {
+          const parsedUser = JSON.parse(userData);
+          setUser(parsedUser);
+          setIsAuthenticated(true);
+        } catch (error) {
+          console.error('Error parsing user data:', error);
+          setUser(null);
+          setIsAuthenticated(false);
+        }
+      } else {
+        setUser(null);
+        setIsAuthenticated(false);
+      }
+      setUserLoading(false);
     };
 
-    // Listen to storage events (for different tabs)
-    window.addEventListener('storage', handleStorageChange);
-    // Listen to custom auth events (for same tab)
+    // Initial check
+    handleAuthChange();
+
+    // Listen to custom auth events
     window.addEventListener('authChange', handleAuthChange);
+    window.addEventListener('storage', handleAuthChange);
     
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('authChange', handleAuthChange);
+      window.removeEventListener('storage', handleAuthChange);
     };
   }, []);
 
-  // Check token on location change
+  // Check authentication on location change
   useEffect(() => {
-    const newToken = localStorage.getItem('token');
-    if (newToken !== token) {
-      setToken(newToken);
+    const userData = localStorage.getItem('user');
+    const newAuthState = !!userData;
+    if (newAuthState !== isAuthenticated) {
+      if (userData) {
+        try {
+          const parsedUser = JSON.parse(userData);
+          setUser(parsedUser);
+          setIsAuthenticated(true);
+        } catch (error) {
+          setUser(null);
+          setIsAuthenticated(false);
+        }
+      } else {
+        setUser(null);
+        setIsAuthenticated(false);
+      }
     }
-  }, [location, token]);
+  }, [location, isAuthenticated]);
 
   // Scroll effect
   useEffect(() => {
@@ -66,52 +90,29 @@ const Navbar: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Fetch user profile whenever token changes
-  useEffect(() => {
-    const fetchUser = async () => {
-      if (!token) {
-        setUser(null);
-        setUserLoading(false);
-        return;
-      }
+  const handleLogout = async () => {
+    try {
+      // Call logout endpoint to clear httpOnly cookie
+      await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/api/citizen/logout`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
 
-      setUserLoading(true);
-      try {
-        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/citizen/me`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          setUser(data);
-        } else {
-          setUser(null);
-          // If token is invalid, remove it
-          if (res.status === 401) {
-            localStorage.removeItem('token');
-            setToken(null);
-          }
-        }
-      } catch (err) {
-        console.error('Error fetching user:', err);
-        setUser(null);
-      } finally {
-        setUserLoading(false);
-      }
-    };
-
-    fetchUser();
-  }, [token]);
-
-  const handleLogout = () => {
+    // Clear localStorage
     localStorage.clear();
-    setToken(null);
+    
+    // Update state
+    setIsAuthenticated(false);
     setShowProfileMenu(false);
     setUser(null);
+    
     // Dispatch custom event to notify other components
     window.dispatchEvent(new Event('authChange'));
+    
+    // Navigate to home
     navigate('/home');
   };
 
@@ -146,13 +147,8 @@ const Navbar: React.FC = () => {
               <span>Track Issues</span>
             </Link>
 
-            {token ? (
+            {isAuthenticated ? (
               <div className="flex items-center space-x-4">
-                {/* <button className="relative p-2 text-gray-400 hover:text-teal-400 transition-colors">
-                  <Bell className="h-5 w-5" />
-                  <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
-                </button> */}
-
                 <div className="relative" ref={profileMenuRef}>
                   <button
                     onClick={() => setShowProfileMenu(!showProfileMenu)}
@@ -224,7 +220,7 @@ const Navbar: React.FC = () => {
             <Link to="/my-complaints" className="block text-gray-300 hover:text-teal-400 transition-colors py-2" onClick={() => setIsOpen(false)}>Track Issues</Link>
             <hr className="border-gray-700" />
 
-            {token ? (
+            {isAuthenticated ? (
               <>
                 <div className="flex items-center space-x-3 p-3 bg-gradient-to-r from-teal-400/10 to-blue-500/10 rounded-lg">
                   <div className="h-10 w-10 rounded-full bg-gradient-to-r from-teal-400 to-blue-500 flex items-center justify-center text-white font-semibold">
@@ -253,6 +249,44 @@ const Navbar: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <style jsx>{`
+        .glass {
+          background: rgba(255, 255, 255, 0.05);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .gradient-text {
+          background: linear-gradient(135deg, #14b8a6, #3b82f6);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+
+        .ripple {
+          position: relative;
+          overflow: hidden;
+        }
+
+        .ripple:before {
+          content: "";
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 0;
+          height: 0;
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.1);
+          transform: translate(-50%, -50%);
+          transition: width 0.6s, height 0.6s;
+        }
+
+        .ripple:hover:before {
+          width: 300px;
+          height: 300px;
+        }
+      `}</style>
     </nav>
   );
 };

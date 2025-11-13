@@ -4,20 +4,25 @@ import { Mail, Lock, Eye, EyeOff, Shield } from 'lucide-react';
 import axios from 'axios';
 import Navbar from '../components/Navbar';
 
+// const location = useLocation();
+// const from = location.state?.from?.pathname || '/complaint';
+
 const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
-    password: ''
+    password: '',
+    rememberMe: false
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, type, checked, value } = e.target;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [name]: type === 'checkbox' ? checked : value
     });
     // Clear error when user starts typing
     if (error) setError('');
@@ -29,32 +34,45 @@ const Login: React.FC = () => {
     setError('');
 
     try {
-      const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/citizen/login`, formData, {
-        withCredentials: true
+      console.log('Login request data:', formData); // Debug log
+      
+      const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+      const res = await axios.post(`${API_BASE}/api/citizen/login`, formData, {
+        withCredentials: true,
+        timeout: 10000 // 10 second timeout
       });
 
       console.log('Login response:', res.data);
 
-      // Store token and user info if available
-      if (res.data.token) {
-        localStorage.setItem('token', res.data.token);
-        if (res.data.user) {
-          localStorage.setItem('email', res.data.user.email || '');
-          localStorage.setItem('userId', res.data.user._id || '');
-        }
-
-        // 🔥 CRITICAL: Dispatch the authChange event to notify navbar
-        window.dispatchEvent(new Event('authChange'));
-        
-        // Small delay to ensure navbar updates before navigation
-        setTimeout(() => {
-          navigate('/complaint');
-        }, 100);
+      // Store user info if available (don't store token since it's in httpOnly cookie)
+      if (res.data.user) {
+        localStorage.setItem('user', JSON.stringify(res.data.user));
+        localStorage.setItem('userEmail', res.data.user.email);
+        localStorage.setItem('userName', res.data.user.name);
       }
+
+      // Dispatch auth change event to notify navbar and other components
+      window.dispatchEvent(new Event('authChange'));
+      
+      alert('Login successful! Redirecting...');
+      
+      // Navigate to complaint form
+      navigate('/complaint', { replace: true });
+      
     } catch (err: any) {
-      const msg = err.response?.data?.message || 'Login failed. Please check your credentials.';
-      setError(msg);
-      console.error('Login error:', err);
+      console.error('Login error details:', err);
+      console.error('Error response:', err.response?.data);
+      
+      if (err.code === 'ECONNABORTED') {
+        setError('Request timeout. Please check your connection and try again.');
+      } else if (err.response?.status === 401) {
+        setError('Invalid email or password. Please check your credentials.');
+      } else if (err.response?.status === 400) {
+        setError(err.response?.data?.message || 'Please check your input and try again.');
+      } else {
+        const msg = err.response?.data?.message || 'Login failed. Please try again.';
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -157,11 +175,14 @@ const Login: React.FC = () => {
                 <div className="flex items-center">
                   <input
                     type="checkbox"
-                    id="remember"
+                    id="rememberMe"
+                    name="rememberMe"
+                    checked={formData.rememberMe}
+                    onChange={handleInputChange}
                     className="h-4 w-4 text-teal-400 focus:ring-teal-400 border-gray-600 rounded bg-transparent"
                     disabled={loading}
                   />
-                  <label htmlFor="remember" className="ml-2 block text-sm text-gray-300">
+                  <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-300">
                     Remember me
                   </label>
                 </div>

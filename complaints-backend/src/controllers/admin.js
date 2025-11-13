@@ -74,6 +74,7 @@ exports.getAllComplaints = async (req, res) => {
       SELECT 
         complaint_id AS id,
         citizen_name,
+        citizen_email,
         department,
         description,
         image_url,
@@ -82,6 +83,7 @@ exports.getAllComplaints = async (req, res) => {
         longitude,
         address
       FROM complaints
+      ORDER BY created_at DESC
     `);
     res.json({ complaints: result.rows });
   } catch (err) {

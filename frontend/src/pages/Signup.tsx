@@ -13,38 +13,112 @@ interface SignupFormData {
   address: string;
   confirmPassword: string;
   agreeToTerms: boolean;
+  rememberMe: boolean;
 }
 
 // Environment variable for backend URL
 const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
-// const API = import.meta.env.VITE_API_URL || 'https://backend.smartcivic.tech';
+
+// Password validation function
+const validatePassword = (password: string): { isValid: boolean; errors: string[] } => {
+  const errors: string[] = [];
+  
+  if (password.length < 8) {
+    errors.push('Password must be at least 8 characters long');
+  }
+  if (!/[A-Z]/.test(password)) {
+    errors.push('Password must contain at least one uppercase letter');
+  }
+  if (!/[a-z]/.test(password)) {
+    errors.push('Password must contain at least one lowercase letter');
+  }
+  if (!/[0-9]/.test(password)) {
+    errors.push('Password must contain at least one number');
+  }
+  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+    errors.push('Password must contain at least one special character');
+  }
+  
+  return { isValid: errors.length === 0, errors };
+};
+
+// Phone validation function
+const validatePhone = (phone: string): boolean => {
+  // Remove +91 if present and check if remaining is 10 digits
+  const cleanPhone = phone.replace(/^\+91/, '');
+  return /^\d{10}$/.test(cleanPhone);
+};
 
 const Signup: React.FC = () => {
   const navigate = useNavigate();
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
+  const [phoneError, setPhoneError] = useState<string>('');
 
   const [formData, setFormData] = useState<SignupFormData>({
     fullName: '',
     email: '',
-    phone: '',
+    phone: '+91', // Default +91 prefix
     password: '',
     address: '',
     confirmPassword: '',
-    agreeToTerms: false
+    agreeToTerms: false,
+    rememberMe: false
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, type, checked, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: type === 'checkbox' ? checked : value
-    });
+    
+    if (name === 'phone') {
+      // Ensure +91 prefix is always present
+      let phoneValue = value;
+      if (!phoneValue.startsWith('+91')) {
+        phoneValue = '+91' + phoneValue.replace(/^\+91/, '');
+      }
+      setFormData({
+        ...formData,
+        [name]: phoneValue
+      });
+      
+      // Validate phone number
+      if (!validatePhone(phoneValue)) {
+        setPhoneError('Phone number must be 10 digits after +91');
+      } else {
+        setPhoneError('');
+      }
+    } else if (name === 'password') {
+      setFormData({
+        ...formData,
+        [name]: value
+      });
+      
+      // Validate password
+      const validation = validatePassword(value);
+      setPasswordErrors(validation.errors);
+    } else {
+      setFormData({
+        ...formData,
+        [name]: type === 'checkbox' ? checked : value
+      });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Final validations
+    const passwordValidation = validatePassword(formData.password);
+    if (!passwordValidation.isValid) {
+      alert('Please fix password requirements: ' + passwordValidation.errors.join(', '));
+      return;
+    }
+
+    if (!validatePhone(formData.phone)) {
+      alert('Please enter a valid phone number');
+      return;
+    }
 
     if (formData.password !== formData.confirmPassword) {
       alert('Passwords do not match');
@@ -57,9 +131,10 @@ const Signup: React.FC = () => {
         email: formData.email,
         phone: formData.phone,
         address: formData.address,
-        password: formData.password
+        password: formData.password,
+        rememberMe: formData.rememberMe
       }, {
-        withCredentials: true  // 👈 IMPORTANT for CORS and cookies
+        withCredentials: true
       });
 
       alert('Signup successful!');
@@ -68,17 +143,20 @@ const Signup: React.FC = () => {
       setFormData({
         fullName: '',
         email: '',
-        phone: '',
+        phone: '+91',
         password: '',
         address: '',
         confirmPassword: '',
-        agreeToTerms: false
+        agreeToTerms: false,
+        rememberMe: false
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Signup error:', error);
-      alert('Signup failed');
+      const errorMessage = error.response?.data?.message || 'Signup failed';
+      alert(errorMessage);
     }
   };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       <Navbar />
@@ -127,15 +205,20 @@ const Signup: React.FC = () => {
               />
 
               {/* Phone */}
-              <InputField
-                label="Phone Number"
-                icon={<Phone className="h-5 w-5 text-gray-400" />}
-                name="phone"
-                type="tel"
-                value={formData.phone}
-                onChange={handleInputChange}
-                placeholder="Enter your phone number"
-              />
+              <div>
+                <InputField
+                  label="Phone Number"
+                  icon={<Phone className="h-5 w-5 text-gray-400" />}
+                  name="phone"
+                  type="tel"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  placeholder="+91XXXXXXXXXX"
+                />
+                {phoneError && (
+                  <p className="mt-1 text-sm text-red-400">{phoneError}</p>
+                )}
+              </div>
 
               {/* Address */}
               <InputField
@@ -148,17 +231,29 @@ const Signup: React.FC = () => {
               />
 
               {/* Password */}
-              <InputField
-                label="Password"
-                icon={<Lock className="h-5 w-5 text-gray-400" />}
-                name="password"
-                type={showPassword ? 'text' : 'password'}
-                value={formData.password}
-                onChange={handleInputChange}
-                placeholder="Create a password"
-                toggleEye={() => setShowPassword(!showPassword)}
-                showEye={showPassword}
-              />
+              <div>
+                <InputField
+                  label="Password"
+                  icon={<Lock className="h-5 w-5 text-gray-400" />}
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  placeholder="Create a password"
+                  toggleEye={() => setShowPassword(!showPassword)}
+                  showEye={showPassword}
+                />
+                {passwordErrors.length > 0 && (
+                  <div className="mt-2 space-y-1">
+                    {passwordErrors.map((error, index) => (
+                      <p key={index} className="text-sm text-red-400">• {error}</p>
+                    ))}
+                  </div>
+                )}
+                <div className="mt-2 text-xs text-gray-500">
+                  Password must contain: 8+ characters, uppercase, lowercase, number, and special character
+                </div>
+              </div>
 
               {/* Confirm Password */}
               <InputField
@@ -172,6 +267,21 @@ const Signup: React.FC = () => {
                 toggleEye={() => setShowConfirmPassword(!showConfirmPassword)}
                 showEye={showConfirmPassword}
               />
+
+              {/* Remember Me */}
+              <div className="flex items-start">
+                <input
+                  type="checkbox"
+                  id="rememberMe"
+                  name="rememberMe"
+                  checked={formData.rememberMe}
+                  onChange={handleInputChange}
+                  className="h-4 w-4 text-teal-400 focus:ring-teal-400 border-gray-600 rounded bg-transparent"
+                />
+                <label htmlFor="rememberMe" className="ml-2 text-sm text-gray-300">
+                  Remember Me
+                </label>
+              </div>
 
               {/* Terms */}
               <div className="flex items-start">
@@ -195,7 +305,7 @@ const Signup: React.FC = () => {
               {/* Submit */}
               <button
                 type="submit"
-                disabled={!formData.agreeToTerms}
+                disabled={!formData.agreeToTerms || passwordErrors.length > 0 || phoneError !== ''}
                 className="w-full glass glow py-3 px-4 rounded-lg text-teal-400 hover:bg-teal-400 hover:text-white transition-all hover-lift ripple font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Create Account
