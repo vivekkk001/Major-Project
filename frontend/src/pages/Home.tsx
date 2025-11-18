@@ -118,7 +118,7 @@ const Home: React.FC = () => {
             {/* File Complaint Button - Prominently Displayed */}
             <div className="flex justify-center mb-8">
               <Link
-                to="/Login"
+                to="/complaint"
                 className="glass glow px-10 py-5 rounded-lg text-teal-400 hover:bg-teal-400 hover:text-white transition-all hover-lift ripple flex items-center space-x-3 text-xl font-medium"
               >
                 <FileText className="h-6 w-6" />

@@ -17,6 +17,7 @@ const MyComplaints: React.FC = () => {
         const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/complaints/my-complaints`, {
           withCredentials: true, // Sends JWT in cookies
         });
+        console.log("Fetched complaints:", res.data);
         setComplaints(res.data || []);
       } catch (err) {
         console.error('Failed to fetch complaints:', err);
@@ -102,19 +103,19 @@ const MyComplaints: React.FC = () => {
             </div>
             <div className="glass rounded-lg p-6 text-center hover-lift">
               <div className="text-2xl font-bold text-yellow-400 mb-1">
-                {complaints.filter(c => c.status === 'pending').length}
+                {complaints.filter(c => c.status === 'Pending').length}
               </div>
               <div className="text-gray-400 text-sm">Pending</div>
             </div>
             <div className="glass rounded-lg p-6 text-center hover-lift">
               <div className="text-2xl font-bold text-blue-400 mb-1">
-                {complaints.filter(c => c.status === 'in-progress').length}
+                {complaints.filter(c => c.status === 'In Progress').length}
               </div>
               <div className="text-gray-400 text-sm">In Progress</div>
             </div>
             <div className="glass rounded-lg p-6 text-center hover-lift">
               <div className="text-2xl font-bold text-green-400 mb-1">
-                {complaints.filter(c => c.status === 'resolved').length}
+                {complaints.filter(c => c.status === 'Resolved').length}
               </div>
               <div className="text-gray-400 text-sm">Resolved</div>
             </div>
@@ -123,19 +124,61 @@ const MyComplaints: React.FC = () => {
           {/* Complaints List */}
           <div className="space-y-6">
             {filteredComplaints.length > 0 ? (
-              filteredComplaints.map((complaint) => (
-                <ComplaintCard key={complaint.complaint_id} {...complaint} />
-              ))
-            ) : (
+  filteredComplaints.map((complaint) => {
+    console.log("STATUS VALUE:", complaint.status); // <-- ADD THIS HERE
+
+    return (
+      <div
+        key={complaint.complaint_id}
+        className="glass rounded-xl p-6 hover-lift"
+      >
+        {/* Existing Complaint Card */}
+        <ComplaintCard {...complaint} />
+
+        {/* Blockchain Transaction Hash Section */}
+        {complaint.blockchain_tx_hash && (
+          <div className="mt-4 p-4 glass-dark rounded-lg border border-gray-700">
+            <h3 className="text-white font-semibold mb-2">
+              Blockchain Transaction Hash
+            </h3>
+
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-teal-400 break-all mb-3 sm:mb-0">
+                {complaint.blockchain_tx_hash}
+              </p>
+
+              <div className="flex space-x-3">
+                <button
+                  onClick={() =>
+                    window.open(
+                      `https://sepolia.etherscan.io/tx/${complaint.blockchain_tx_hash}`,
+                      "_blank"
+                    )
+                  }
+                  className="glass glow px-5 py-2 rounded-lg text-teal-300 hover:bg-teal-400 hover:text-white transition-all ripple"
+                >
+                  Verify
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  })
+) : (
+
               <div className="glass rounded-xl p-12 text-center">
                 <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-white mb-2">No complaints found</h3>
+                <h3 className="text-xl font-semibold text-white mb-2">
+                  No complaints found
+                </h3>
                 <p className="text-gray-400 mb-6">
-                  {searchTerm || statusFilter !== 'all'
-                    ? 'Try adjusting your search or filter criteria'
+                  {searchTerm || statusFilter !== "all"
+                    ? "Try adjusting your search or filter criteria"
                     : "You haven't submitted any complaints yet"}
                 </p>
-                {!searchTerm && statusFilter === 'all' && (
+                {!searchTerm && statusFilter === "all" && (
                   <Link
                     to="/complaint"
                     className="inline-flex items-center space-x-2 glass glow px-6 py-3 rounded-lg text-teal-400 hover:bg-teal-400 hover:text-white transition-all hover-lift ripple"
@@ -147,6 +190,7 @@ const MyComplaints: React.FC = () => {
               </div>
             )}
           </div>
+
         </div>
       </div>
 

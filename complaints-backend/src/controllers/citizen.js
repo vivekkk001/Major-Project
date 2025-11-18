@@ -104,8 +104,7 @@ exports.signup = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 12);
     console.log("Password hashed successfully"); // Debug log
 
-    // Insert user into DB - match your actual table structure
-    // Since you don't have an 'id' column, we'll use a different approach
+    // Insert user into DB 
     const result = await pool.query(
       "INSERT INTO citizens (name, email, phone, password, address, created_at) VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING name, email",
       [name.trim(), email.toLowerCase(), phone, hashedPassword, address.trim()]

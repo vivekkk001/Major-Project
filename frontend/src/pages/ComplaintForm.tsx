@@ -1,27 +1,51 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import axios from 'axios';
-import { Camera, Loader, MapPin, Navigation, Send, AlertCircle, X, RotateCcw } from 'lucide-react';
-import Navbar from '../components/Navbar';
-import { useNavigate } from 'react-router-dom';
-import ReCAPTCHA from 'react-google-recaptcha';
-
+import { Camera, Loader, MapPin, Navigation, Send, AlertCircle, X, RotateCcw, Sparkles, RefreshCw, Shield } from 'lucide-react';
 
 const ComplaintForm = () => {
   const [description, setDescription] = useState('');
-  const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const [location, setLocation] = useState({ lat: null as number | null, lng: null as number | null });
+  const [suggestions, setSuggestions] = useState([]);
+  const [capturedImage, setCapturedImage] = useState(null);
+  const [location, setLocation] = useState({ lat: null, lng: null });
   const [message, setMessage] = useState('');
   const [isBlurry, setIsBlurry] = useState(false);
   const [loading, setLoading] = useState(false);
   const [locationLoading, setLocationLoading] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
-  const [stream, setStream] = useState<MediaStream | null>(null);
+  const [stream, setStream] = useState(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  
+  // 🆕 CAPTCHA States
+  const [captchaSvg, setCaptchaSvg] = useState('');
+  const [captchaInput, setCaptchaInput] = useState('');
+  const [captchaLoading, setCaptchaLoading] = useState(false);
 
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const navigate = useNavigate();
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const debounceTimer = useRef(null);
+  const API_BASE_URL = 'http://localhost:5000'; // Replace with your actual API URL
 
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  // 🆕 Load CAPTCHA on component mount
+  useEffect(() => {
+    loadCaptcha();
+  }, []);
+
+  // 🆕 Load CAPTCHA Function
+  const loadCaptcha = async () => {
+    setCaptchaLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/complaints/captcha`, {
+        credentials: 'include',
+      });
+      const svgText = await response.text();
+      setCaptchaSvg(svgText);
+      setCaptchaInput('');
+    } catch (error) {
+      console.error('Failed to load CAPTCHA:', error);
+      setMessage('Failed to load CAPTCHA. Please refresh the page.');
+    } finally {
+      setCaptchaLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (videoRef.current && stream) {
@@ -35,7 +59,58 @@ const ComplaintForm = () => {
     }
   }, [stream]);
 
-  const checkImageBlur = (imageData: Uint8ClampedArray, width: number, height: number): boolean => {
+  const handleAIHelp = async (text) => {
+    if (text.length <= 3) {
+      setSuggestions([]);
+      return;
+    }
+    
+    setAiLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/complaints/generate-suggestions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ keyword: text })
+      });
+
+      const data = await response.json();
+      if (data && data.suggestions) {
+        setSuggestions(data.suggestions);
+      } else {
+        setSuggestions([]);
+      }
+    } catch (error) {
+      console.error("AI Error:", error);
+      setSuggestions([]);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const handleDescriptionChange = (e) => {
+    const value = e.target.value;
+    setDescription(value);
+    
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+    
+    if (value.length > 3) {
+      debounceTimer.current = setTimeout(() => {
+        handleAIHelp(value);
+      }, 1000);
+    } else {
+      setSuggestions([]);
+    }
+  };
+
+  const applySuggestion = (suggestion) => {
+    setDescription(suggestion);
+    setSuggestions([]);
+  };
+
+  const checkImageBlur = (imageData, width, height) => {
     let sum = 0;
     for (let i = 0; i < imageData.length; i += 4) {
       const gray = 0.299 * imageData[i] + 0.587 * imageData[i + 1] + 0.114 * imageData[i + 2];
@@ -70,7 +145,7 @@ const ComplaintForm = () => {
       setStream(mediaStream);
       setShowCamera(true);
       setMessage('');
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error accessing camera:', error);
       let errorMessage = 'Failed to access camera. ';
       if (error.name === 'NotAllowedError') {
@@ -148,17 +223,18 @@ const ComplaintForm = () => {
     );
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!captchaInput || captchaInput.trim() === '') {
+      setMessage('Please enter the CAPTCHA code.');
+      return;
+    }
+
     if (!description || !capturedImage || !location.lat || !location.lng) {
       setMessage('Please fill all required fields.');
       return;
     }
-    if (!captchaToken) {
-      setMessage('Please verify the CAPTCHA!');
-      return;
-    }
-
 
     setLoading(true);
     setMessage('');
@@ -170,27 +246,41 @@ const ComplaintForm = () => {
     const formData = new FormData();
     formData.append('description', description);
     formData.append('image', imageFile);
-    formData.append('latitude', location.lat!.toString());
-    formData.append('longitude', location.lng!.toString());
+    formData.append('latitude', location.lat.toString());
+    formData.append('longitude', location.lng.toString());
+    formData.append('captcha', captchaInput);
 
     try {
-      const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/complaints`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-        withCredentials: true
+      const res = await fetch(`${API_BASE_URL}/api/complaints`, {
+        method: 'POST',
+        credentials: 'include',
+        body: formData
       });
 
+      const data = await res.json();
+
       if (res.status === 201) {
-        navigate('/my-complaints');
+        setMessage('Complaint submitted successfully! Redirecting...');
+        
+        // Wait 1.5 seconds to show success message, then redirect
+        setTimeout(() => {
+          window.location.href = 'http://localhost:5173/my-complaints';
+        }, 1500);
+      } else {
+        throw new Error(data.message || 'Something went wrong');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      setMessage(err.response?.data?.message || 'Something went wrong.');
-    } finally {
+      const errorMsg = err.message || 'Something went wrong.';
+      setMessage(errorMsg);
+      
+      if (errorMsg.includes('CAPTCHA')) {
+        loadCaptcha();
+      }
       setLoading(false);
     }
   };
 
-  // Generate floating particles (same as home page)
   const particles = Array.from({ length: 50 }, (_, i) => (
     <div
       key={i}
@@ -207,9 +297,6 @@ const ComplaintForm = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden">
-      <Navbar />
-
-      {/* Animated Background - Same as Home Page */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         {particles}
         <div className="blob absolute top-20 left-10 w-72 h-72 bg-gradient-to-r from-teal-400/20 to-cyan-400/20 rounded-full morph"></div>
@@ -240,21 +327,42 @@ const ComplaintForm = () => {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-8">
-            {/* Description */}
+          <div className="space-y-8">
+            {/* Description with AI Help */}
             <div className="space-y-2">
               <label className="text-lg font-medium text-white flex items-center space-x-2">
                 <span>Complaint Description</span>
                 <span className="text-red-400">*</span>
+                {aiLoading && <Sparkles className="h-4 w-4 text-teal-400 animate-pulse" />}
               </label>
               <textarea
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={handleDescriptionChange}
                 rows={4}
                 required
-                placeholder="Describe the issue in detail..."
+                placeholder="Type a keyword like 'pothole', 'garbage', 'streetlight'..."
                 className="w-full p-4 rounded-lg glass border border-white/20 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-400/50 focus:border-teal-400/50 transition-all backdrop-blur-sm"
               />
+              
+              {suggestions.length > 0 && (
+                <div className="glass border border-purple-400/30 bg-purple-400/10 p-4 rounded-lg space-y-3 animate-fadeIn">
+                  <div className="space-y-2">
+                    {suggestions.map((suggestion, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        onClick={() => applySuggestion(suggestion)}
+                        className="w-full p-3 text-left glass rounded-lg text-sm text-gray-300 hover:bg-purple-400/20 hover:border-purple-400/50 border border-white/10 transition-all hover-lift group"
+                      >
+                        <span className="flex items-start gap-2">
+                          <span className="text-purple-400 font-bold">{index + 1}.</span>
+                          <span className="group-hover:text-white transition-colors">{suggestion}</span>
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Camera Section */}
@@ -385,20 +493,48 @@ const ComplaintForm = () => {
                 </div>
               )}
             </div>
-            <div className="flex justify-center">
-              <ReCAPTCHA
-                sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY!}
-                onChange={(token) => setCaptchaToken(token)}
-                onExpired={() => setCaptchaToken(null)}
-                theme="dark"
-              />
-            </div>
 
+            {/* 🆕 CAPTCHA Section */}
+            <div className="space-y-4">
+              <label className="text-lg font-medium text-white flex items-center space-x-2">
+                <Shield className="h-5 w-5" />
+                <span>Verify You're Human</span>
+                <span className="text-red-400">*</span>
+              </label>
+
+              <div className="glass border border-white/20 p-4 rounded-lg space-y-4">
+                <div className="flex items-center gap-4">
+                  <div 
+                    className="flex-1 bg-slate-800 rounded-lg p-3 flex items-center justify-center border border-white/10"
+                    dangerouslySetInnerHTML={{ __html: captchaSvg }}
+                  />
+                  <button
+                    type="button"
+                    onClick={loadCaptcha}
+                    disabled={captchaLoading}
+                    className="p-3 glass rounded-lg text-teal-400 hover:bg-teal-400 hover:text-white transition-all hover-lift group disabled:opacity-50"
+                    title="Refresh CAPTCHA"
+                  >
+                    <RefreshCw className={`h-5 w-5 ${captchaLoading ? 'animate-spin' : 'group-hover:rotate-180'} transition-transform duration-300`} />
+                  </button>
+                </div>
+
+                <input
+                  type="text"
+                  value={captchaInput}
+                  onChange={(e) => setCaptchaInput(e.target.value)}
+                  placeholder="Enter the code shown above"
+                  required
+                  className="w-full p-4 rounded-lg glass border border-white/20 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-400/50 focus:border-teal-400/50 transition-all backdrop-blur-sm text-center text-lg font-mono tracking-wider"
+                />
+              </div>
+            </div>
 
             {/* Submit Button */}
             <button
-              type="submit"
-              disabled={loading || !description || !capturedImage || !location.lat || !location.lng}
+              type="button"
+              onClick={handleSubmit}
+              disabled={loading || !description || !capturedImage || !location.lat || !location.lng || !captchaInput}
               className="w-full py-4 glass-dark glow rounded-lg flex items-center justify-center gap-3 font-semibold text-lg text-teal-400 hover:bg-teal-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all hover-lift ripple group"
             >
               {loading ? (
@@ -408,11 +544,11 @@ const ComplaintForm = () => {
               )}
               {loading ? 'Submitting Complaint...' : 'Submit Complaint'}
             </button>
-          </form>
+          </div>
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         .particle {
           position: absolute;
           background: linear-gradient(45deg, #14b8a6, #06b6d4);
@@ -424,6 +560,15 @@ const ComplaintForm = () => {
         @keyframes float {
           0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.6; }
           50% { transform: translateY(-100px) rotate(180deg); opacity: 0.2; }
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-out;
         }
 
         .blob {

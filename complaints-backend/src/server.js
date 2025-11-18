@@ -56,6 +56,7 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
 const pool = require("./config/db");
+const session = require('express-session');
 require("dotenv").config();
 
 const app = express();
@@ -77,6 +78,17 @@ app.use(cors({
     }
   },
   credentials: true,
+}));
+
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'your-secret-key-change-this-in-production',
+  resave: false,
+  saveUninitialized: true,
+  cookie: { 
+    secure: process.env.NODE_ENV === 'production', // true in production with HTTPS
+    httpOnly: true,
+    maxAge: 10 * 60 * 1000 // 10 minutes
+  }
 }));
 
 // --- Middlewares ---
