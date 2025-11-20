@@ -127,33 +127,8 @@ const Home: React.FC = () => {
               </Link>
             </div>
 
-            {/* Login Buttons - Positioned Below */}
-            {/* <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-8">
-              <Link 
-                to="/login"
-                className="glass px-6 py-3 rounded-lg text-gray-300 hover:text-teal-400 transition-all hover-lift flex items-center space-x-2"
-              >
-                <Users className="h-5 w-5" />
-                <span>Citizen Login</span>
-              </Link>
-              
-              <Link 
-                to="/official/login"
-                className="glass px-6 py-3 rounded-lg text-gray-300 hover:text-orange-400 transition-all hover-lift flex items-center space-x-2"
-              >
-                <Building2 className="h-5 w-5" />
-                <span>Official Login</span>
-              </Link>
-            </div> */}
           </div>
         </div>
-
-        {/* Scroll Indicator */}
-        {/* <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-          <div className="w-6 h-10 border-2 border-teal-400/50 rounded-full flex justify-center">
-            <div className="w-1 h-3 bg-teal-400 rounded-full mt-2 animate-pulse"></div>
-          </div>
-        </div> */}
       </section>
 
       {/* Features Carousel Section - Similar to Image Style */}
@@ -252,8 +227,8 @@ const Home: React.FC = () => {
                 key={index}
                 onClick={() => setCurrentSlide(index)}
                 className={`w-3 h-3 rounded-full transition-all duration-300 ${index === currentSlide
-                    ? 'bg-teal-400 scale-125 shadow-lg shadow-teal-400/50'
-                    : 'bg-gray-600 hover:bg-gray-500 hover:scale-110'
+                  ? 'bg-teal-400 scale-125 shadow-lg shadow-teal-400/50'
+                  : 'bg-gray-600 hover:bg-gray-500 hover:scale-110'
                   }`}
               />
             ))}

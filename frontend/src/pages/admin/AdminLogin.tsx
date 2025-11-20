@@ -36,8 +36,8 @@ const AdminLogin: React.FC = () => {
 
       {/* Clickable SmartCivic logo */}
       <div
-        onClick={() => navigate('/home')}
-        className="absolute top-6 left-20 flex items-center space-x-2 z-50 cursor-pointer"
+        onClick={() => navigate('')}
+        className="absolute top-6 left-20 flex items-center space-x-2 z-50 cursor-default"
       >
         <ShieldCheck className="text-teal-400 h-6 w-6" />
         <span className="text-xl font-bold text-cyan-400">SmartCivic</span>

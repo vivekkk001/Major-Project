@@ -124,49 +124,62 @@ const MyComplaints: React.FC = () => {
           {/* Complaints List */}
           <div className="space-y-6">
             {filteredComplaints.length > 0 ? (
-  filteredComplaints.map((complaint) => {
-    console.log("STATUS VALUE:", complaint.status); // <-- ADD THIS HERE
+              filteredComplaints.map((complaint) => {
+                console.log("STATUS VALUE:", complaint.status);
 
-    return (
-      <div
-        key={complaint.complaint_id}
-        className="glass rounded-xl p-6 hover-lift"
-      >
-        {/* Existing Complaint Card */}
-        <ComplaintCard {...complaint} />
+                return (
+                  <div
+                    key={complaint.complaint_id}
+                    className="glass rounded-xl p-6 hover-lift"
+                  >
+                    {/* Existing Complaint Card */}
+                    <ComplaintCard {...complaint} />
 
-        {/* Blockchain Transaction Hash Section */}
-        {complaint.blockchain_tx_hash && (
-          <div className="mt-4 p-4 glass-dark rounded-lg border border-gray-700">
-            <h3 className="text-white font-semibold mb-2">
-              Blockchain Transaction Hash
-            </h3>
+                    {/* HASH ACTION ROW - SIDE BY SIDE */}
+                    <div className="mt-6 flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
 
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-teal-400 break-all mb-3 sm:mb-0">
-                {complaint.blockchain_tx_hash}
-              </p>
+                      {/* Pending */}
+                      {complaint.pending_hash && (
+                        <button
+                          onClick={() =>
+                            window.open(`https://sepolia.etherscan.io/tx/${complaint.pending_hash}`, "_blank")
+                          }
+                          className="flex-1 glass glow px-5 py-3 rounded-lg text-yellow-300 hover:bg-yellow-400 hover:text-white transition-all"
+                        >
+                          Verify Pending Transaction
+                        </button>
+                      )}
 
-              <div className="flex space-x-3">
-                <button
-                  onClick={() =>
-                    window.open(
-                      `https://sepolia.etherscan.io/tx/${complaint.blockchain_tx_hash}`,
-                      "_blank"
-                    )
-                  }
-                  className="glass glow px-5 py-2 rounded-lg text-teal-300 hover:bg-teal-400 hover:text-white transition-all ripple"
-                >
-                  Verify
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  })
-) : (
+                      {/* In Progress */}
+                      {complaint.progress_hash && (
+                        <button
+                          onClick={() =>
+                            window.open(`https://sepolia.etherscan.io/tx/${complaint.progress_hash}`, "_blank")
+                          }
+                          className="flex-1 glass glow px-5 py-3 rounded-lg text-blue-300 hover:bg-blue-400 hover:text-white transition-all"
+                        >
+                          Verify In-Progress Transaction
+                        </button>
+                      )}
+
+                      {/* Resolved */}
+                      {complaint.resolved_hash && (
+                        <button
+                          onClick={() =>
+                            window.open(`https://sepolia.etherscan.io/tx/${complaint.resolved_hash}`, "_blank")
+                          }
+                          className="flex-1 glass glow px-5 py-3 rounded-lg text-green-300 hover:bg-green-400 hover:text-white transition-all"
+                        >
+                          Verify Resolved Transaction
+                        </button>
+                      )}
+
+                    </div>
+
+                  </div>
+                );
+              })
+            ) : (
 
               <div className="glass rounded-xl p-12 text-center">
                 <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />

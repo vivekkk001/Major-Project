@@ -4,9 +4,6 @@ import { Mail, Lock, Eye, EyeOff, Shield } from 'lucide-react';
 import axios from 'axios';
 import Navbar from '../components/Navbar';
 
-// const location = useLocation();
-// const from = location.state?.from?.pathname || '/complaint';
-
 const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -54,10 +51,10 @@ const Login: React.FC = () => {
       // Dispatch auth change event to notify navbar and other components
       window.dispatchEvent(new Event('authChange'));
       
-      alert('Login successful! Redirecting...');
+      // alert('Login successful! Redirecting...');
       
       // Navigate to complaint form
-      navigate('/complaint', { replace: true });
+      navigate('/home', { replace: true });
       
     } catch (err: any) {
       console.error('Login error details:', err);
@@ -172,20 +169,7 @@ const Login: React.FC = () => {
 
               {/* Remember Me & Forgot Password */}
               <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="rememberMe"
-                    name="rememberMe"
-                    checked={formData.rememberMe}
-                    onChange={handleInputChange}
-                    className="h-4 w-4 text-teal-400 focus:ring-teal-400 border-gray-600 rounded bg-transparent"
-                    disabled={loading}
-                  />
-                  <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-300">
-                    Remember me
-                  </label>
-                </div>
+              
                 <Link to="/forgot-password" className="text-sm text-teal-400 hover:text-teal-300 transition-colors">
                   Forgot password?
                 </Link>

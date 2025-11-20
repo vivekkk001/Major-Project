@@ -73,7 +73,7 @@ const OfficialLogin: React.FC = () => {
 
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("department", formData.department);
-      alert(res.data.message || "Login successful!");
+      // alert(res.data.message || "Login successful!");
       navigate("/official/dashboard");
     } catch (err: any) {
       console.error("Login error:", err);
@@ -88,11 +88,12 @@ const OfficialLogin: React.FC = () => {
 
       {/* SmartCivic Logo */}
       <div className="absolute top-6 left-20 flex items-center space-x-2 z-50">
-        <Link to="/home" className="flex items-center space-x-2 hover:opacity-80 transition">
+        <div className="flex items-center space-x-2 cursor-default">
           <ShieldCheck className="text-teal-400 h-6 w-6" />
           <span className="text-xl font-bold text-cyan-400">SmartCivic</span>
-        </Link>
+        </div>
       </div>
+
 
       {/* Background Blobs */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
@@ -215,8 +216,7 @@ const OfficialLogin: React.FC = () => {
                 <div>
                   <p className="text-amber-400 text-sm font-medium">Security Notice</p>
                   <p className="text-gray-300 text-xs mt-1">
-                    This is a secure portal for authorized department personnel only.
-                    All access attempts are logged and monitored.
+                    This is a portal for authorized department personnel only.
                   </p>
                 </div>
               </div>

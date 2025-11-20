@@ -22,7 +22,7 @@ const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 // Password validation function
 const validatePassword = (password: string): { isValid: boolean; errors: string[] } => {
   const errors: string[] = [];
-  
+
   if (password.length < 8) {
     errors.push('Password must be at least 8 characters long');
   }
@@ -38,7 +38,7 @@ const validatePassword = (password: string): { isValid: boolean; errors: string[
   if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
     errors.push('Password must contain at least one special character');
   }
-  
+
   return { isValid: errors.length === 0, errors };
 };
 
@@ -70,7 +70,7 @@ const Signup: React.FC = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, type, checked, value } = e.target;
-    
+
     if (name === 'phone') {
       // Ensure +91 prefix is always present
       let phoneValue = value;
@@ -81,7 +81,7 @@ const Signup: React.FC = () => {
         ...formData,
         [name]: phoneValue
       });
-      
+
       // Validate phone number
       if (!validatePhone(phoneValue)) {
         setPhoneError('Phone number must be 10 digits after +91');
@@ -93,7 +93,7 @@ const Signup: React.FC = () => {
         ...formData,
         [name]: value
       });
-      
+
       // Validate password
       const validation = validatePassword(value);
       setPasswordErrors(validation.errors);
@@ -137,7 +137,7 @@ const Signup: React.FC = () => {
         withCredentials: true
       });
 
-      alert('Signup successful!');
+      // alert('Signup successful!');
       navigate('/login');
 
       setFormData({
@@ -175,7 +175,7 @@ const Signup: React.FC = () => {
               <Shield className="h-12 w-12 text-teal-400 mx-auto" />
               <div className="absolute inset-0 rounded-full bg-teal-400 opacity-20 blur-lg"></div>
             </div>
-            <h2 className="text-3xl font-bold text-white mb-2">Join SmartCivic</h2>
+            <h2 className="text-3xl font-bold text-white mb-2">SmartCivic</h2>
             <p className="text-gray-400">Create your account to get started</p>
           </div>
 
@@ -305,7 +305,7 @@ const Signup: React.FC = () => {
               {/* Submit */}
               <button
                 type="submit"
-                disabled={!formData.agreeToTerms || passwordErrors.length > 0 || phoneError !== ''}
+                disabled={!formData.agreeToTerms || !formData.rememberMe || passwordErrors.length > 0 || phoneError !== ''}
                 className="w-full glass glow py-3 px-4 rounded-lg text-teal-400 hover:bg-teal-400 hover:text-white transition-all hover-lift ripple font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Create Account

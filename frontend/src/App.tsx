@@ -13,6 +13,9 @@ import CitizenProfile from './pages/CitizenProfile';
 import DeveloperPage from './pages/CustomerSupport';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
 import DepartmentManagement from './pages/admin/DepartmentManagement';
@@ -38,6 +41,8 @@ function App() {
           <Route path="/support" element={<DeveloperPage />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-of-service" element={<TermsOfService />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
 
           {/* Protected Citizen Routes */}
           <Route
@@ -65,13 +70,13 @@ function App() {
             }
           />
 
-          {/* Admin Routes - You might want to create AdminProtectedRoute later */}
+          {/* Admin Routes */}
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/departments" element={<DepartmentManagement />} />
           <Route path="/admin/users" element={<UserManagement />} />
 
-          {/* Official Routes - You might want to create OfficialProtectedRoute later */}
+          {/* Official Routes */}
           <Route path="/official/login" element={<OfficialLogin />} />
           <Route path="/official/dashboard" element={<OfficialDashboard />} />
         </Routes>

@@ -10,7 +10,7 @@ const verifyToken = require("../middleware/auth");
 const reverseGeocode = require("../utils/reverseGeocode");
 const { sendDepartmentEmail, sendCitizenEmail } = require("../utils/sendEmail");
 const blockchainService = require("../utils/blockchainService");
-const svgCaptcha = require("svg-captcha"); // 🆕 ADD THIS
+const svgCaptcha = require("svg-captcha");
 
 require("dotenv").config();
 const router = express.Router();
@@ -23,25 +23,30 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// 🆕 CAPTCHA GENERATION ENDPOINT
+/* ==============================
+   CAPTCHA ROUTES
+   ============================== */
+
+// Generate CAPTCHA
 router.get("/captcha", (req, res) => {
   try {
     const captcha = svgCaptcha.create({
       size: 6,
-      noise: 3,
+      noise: 0,
       color: true,
-      background: '#1e293b',
-      width: 250,
-      height: 80,
-      fontSize: 50,
-      charPreset: 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'
+      background: "#1E293B",
+      width: 200,
+      height: 70,
+      fontSize: 60,
+      disort: false,
+      charPreset:
+        "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789",
     });
 
-    // Store CAPTCHA in session
     req.session.captcha = captcha.text.toLowerCase();
     console.log("CAPTCHA Generated:", req.session.captcha);
 
-    res.type('svg');
+    res.type("svg");
     res.status(200).send(captcha.data);
   } catch (error) {
     console.error("Error generating CAPTCHA:", error);
@@ -49,26 +54,26 @@ router.get("/captcha", (req, res) => {
   }
 });
 
-// 🆕 CAPTCHA VERIFICATION ENDPOINT (Optional - for separate verification)
+// Optional: verify CAPTCHA
 router.post("/verify-captcha", (req, res) => {
   try {
     const { captcha } = req.body;
-    
+
     if (!req.session.captcha) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'CAPTCHA expired. Please refresh.' 
+      return res.status(400).json({
+        success: false,
+        message: "CAPTCHA expired. Please refresh.",
       });
     }
 
     const isValid = captcha.toLowerCase() === req.session.captcha;
-    
+
     if (isValid) {
-      return res.json({ success: true, message: 'CAPTCHA verified' });
+      return res.json({ success: true, message: "CAPTCHA verified" });
     } else {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Invalid CAPTCHA. Please try again.' 
+      return res.status(400).json({
+        success: false,
+        message: "Invalid CAPTCHA. Please try again.",
       });
     }
   } catch (error) {
@@ -77,7 +82,10 @@ router.post("/verify-captcha", (req, res) => {
   }
 });
 
-// Generate AI Suggestions
+/* ==============================
+   AI SUGGESTION ROUTE
+   ============================== */
+
 router.post("/generate-suggestions", async (req, res) => {
   try {
     const { keyword } = req.body;
@@ -90,21 +98,18 @@ router.post("/generate-suggestions", async (req, res) => {
     }
 
     const geminiApiKey = process.env.GEMINI_API_KEY;
-    
+
     if (!geminiApiKey) {
       console.error("❌ GEMINI_API_KEY not found in environment variables");
-      return res.status(500).json({ 
+      return res.status(500).json({
         message: "Gemini API key not configured",
-        error: "Server configuration error" 
+        error: "Server configuration error",
       });
     }
-    
+
     console.log("✅ API Key found, length:", geminiApiKey.length);
-    
-    const models = [
-      'gemini-1.5-flash',
-      'gemini-1.5-pro',
-    ];
+
+    const models = ["gemini-1.5-flash", "gemini-1.5-pro"];
 
     const prompt = `Based on the keyword "${keyword}", generate 5 clear and specific complaint descriptions for a civic complaint system. Each description should be a complete sentence that citizens can select to describe their issue. Format the response as a JSON array of strings. Only return the JSON array, nothing else.
 
@@ -117,31 +122,27 @@ Example format:
     for (const model of models) {
       try {
         const geminiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`;
-        
+
         geminiResponse = await axios.post(
           geminiUrl,
           {
             contents: [
               {
-                parts: [
-                  {
-                    text: prompt
-                  }
-                ]
-              }
+                parts: [{ text: prompt }],
+              },
             ],
             generationConfig: {
               temperature: 0.7,
               maxOutputTokens: 500,
-            }
+            },
           },
           {
             headers: {
-              "Content-Type": "application/json"
-            }
+              "Content-Type": "application/json",
+            },
           }
         );
-        
+
         console.log(`Successfully used model: ${model}`);
         break;
       } catch (modelError) {
@@ -155,26 +156,28 @@ Example format:
       throw lastError || new Error("All models failed");
     }
 
-    const generatedText = geminiResponse.data.candidates[0].content.parts[0].text;
-    
+    const generatedText =
+      geminiResponse.data.candidates[0].content.parts[0].text;
+
     let suggestions;
     try {
-      const cleanedText = generatedText.replace(/```json\n?|\n?```/g, "").trim();
+      const cleanedText = generatedText
+        .replace(/```json\n?|\n?```/g, "")
+        .trim();
       suggestions = JSON.parse(cleanedText);
     } catch (parseError) {
       console.error("Error parsing Gemini response:", parseError);
       suggestions = generatedText
         .split("\n")
-        .filter(line => line.trim().length > 0)
-        .map(line => line.replace(/^[-*\d.)\s]+/, "").trim())
+        .filter((line) => line.trim().length > 0)
+        .map((line) => line.replace(/^[-*\d.)\s]+/, "").trim())
         .slice(0, 5);
     }
 
     res.json({
       keyword,
-      suggestions: suggestions.slice(0, 5)
+      suggestions: suggestions.slice(0, 5),
     });
-
   } catch (error) {
     console.error("=== ERROR GENERATING SUGGESTIONS ===");
     console.error("Error type:", error.constructor.name);
@@ -184,54 +187,58 @@ Example format:
       console.error("Response status:", error.response.status);
       console.error("Response data:", error.response.data);
     }
-    
-    res.status(500).json({ 
-      message: "Failed to generate suggestions", 
+
+    res.status(500).json({
+      message: "Failed to generate suggestions",
       error: error.response?.data?.error?.message || error.message,
-      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      details:
+        process.env.NODE_ENV === "development" ? error.stack : undefined,
     });
   }
 });
 
-// 🔄 UPDATED: Complaint Submission with CAPTCHA Verification
+/* ==============================
+   SUBMIT COMPLAINT
+   ============================== */
+
 router.post("/", verifyToken, upload.single("image"), async (req, res) => {
   try {
-    const { description, latitude, longitude, captcha } = req.body; // 🆕 Add captcha
+    const { description, latitude, longitude, captcha } = req.body;
     const citizen_name = req.user.name;
     const citizen_email = req.user.email;
 
-    // 🆕 VERIFY CAPTCHA FIRST
+    // CAPTCHA verify
     if (!captcha || !req.session.captcha) {
-      return res.status(400).json({ 
-        message: "CAPTCHA is required. Please refresh and try again." 
+      return res.status(400).json({
+        message: "CAPTCHA is required. Please refresh and try again.",
       });
     }
 
     if (captcha.toLowerCase() !== req.session.captcha) {
-      delete req.session.captcha; // Clear invalid CAPTCHA
-      return res.status(400).json({ 
-        message: "Invalid CAPTCHA. Please try again." 
+      delete req.session.captcha;
+      return res.status(400).json({
+        message: "Invalid CAPTCHA. Please try again.",
       });
     }
 
-    // Clear CAPTCHA after successful verification
     delete req.session.captcha;
     console.log("✅ CAPTCHA verified successfully");
 
     if (!req.file) {
       return res.status(400).json({ message: "Image file is required" });
     }
- 
-    // Step 1: ML Department classification
-    const mlResponse = await axios.post(process.env.ML_MODEL_API_URL, { description });
+
+    // Step 1: ML classification
+    const mlResponse = await axios.post(process.env.ML_MODEL_API_URL, {
+      description,
+    });
     const department = mlResponse.data.department;
     console.log("Step 1 - Department:", department);
 
-    // Step 2: Convert to .webp and upload to Cloudinary
+    // Step 2: Cloudinary upload as webp
     const buffer = await sharp(req.file.buffer).webp().toBuffer();
-
-    const cloudinaryUpload = () => {
-      return new Promise((resolve, reject) => {
+    const cloudinaryUpload = () =>
+      new Promise((resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(
           { folder: "complaints", format: "webp" },
           (error, result) => {
@@ -241,103 +248,89 @@ router.post("/", verifyToken, upload.single("image"), async (req, res) => {
         );
         streamifier.createReadStream(buffer).pipe(uploadStream);
       });
-    };
 
     const image_url = await cloudinaryUpload();
     console.log("Step 2 - Uploaded to Cloudinary:", image_url);
 
-    // Step 3: Validate location
+    // Step 3: location validation
     if (!latitude || !longitude) {
-      return res.status(400).json({ message: "Location access is required to submit the complaint" });
+      return res.status(400).json({
+        message:
+          "Location access is required to submit the complaint",
+      });
     }
 
-    // Step 4: Reverse Geocoding
+    // Step 4: reverse geocoding
     const lat = parseFloat(latitude);
     const lng = parseFloat(longitude);
     const address = await reverseGeocode(lat, lng);
     console.log("Step 4 - Geocoded Address:", address);
 
-    // Step 5: Generate complaint_id
-    const counterRes = await pool.query("SELECT last_used_id FROM complaint_counter WHERE id = 1");
+    // Step 5: generate complaint_id
+    const counterRes = await pool.query(
+      "SELECT last_used_id FROM complaint_counter WHERE id = 1"
+    );
     const newComplaintId = counterRes.rows[0].last_used_id + 1;
-    await pool.query("UPDATE complaint_counter SET last_used_id = $1 WHERE id = 1", [newComplaintId]);
+    await pool.query(
+      "UPDATE complaint_counter SET last_used_id = $1 WHERE id = 1",
+      [newComplaintId]
+    );
 
-    // Step 6: Insert complaint into DB
-const newComplaint = await pool.query(
-  `INSERT INTO complaints 
-    (complaint_id, citizen_name, citizen_email, department, description, image_url, latitude, longitude, address, status)
-   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-   RETURNING *`,
-  [newComplaintId, citizen_name, citizen_email, department, description, image_url, lat, lng, address, 'pending']
-);
+    // Step 6: insert complaint
+    const newComplaint = await pool.query(
+      `INSERT INTO complaints 
+        (complaint_id, citizen_name, citizen_email, department, description, image_url, latitude, longitude, address, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+       RETURNING *`,
+      [
+        newComplaintId,
+        citizen_name,
+        citizen_email,
+        department,
+        description,
+        image_url,
+        lat,
+        lng,
+        address,
+        "pending",
+      ]
+    );
 
-// Step 6.1: Insert initial status into complaint_status_history
-await pool.query(
-  `INSERT INTO complaint_status_history (complaint_id, status, blockchain_tx_hash)
-   VALUES ($1, $2, $3)`,
-  [newComplaintId, 'pending', null]
-);
+    // Step 7: add to blockchain + save pending_hash
+    try {
+      const txHash = await blockchainService.addComplaint(
+        newComplaintId.toString()
+      );
 
-// Step 7: Add complaint to blockchain
-try {
-  const txHash = await blockchainService.addComplaint(newComplaintId.toString());
+      await pool.query(
+        "UPDATE complaints SET pending_hash = $1 WHERE complaint_id = $2",
+        [txHash, newComplaintId.toString()]
+      );
+      console.log(`Blockchain Tx saved (pending_hash): ${txHash}`);
+    } catch (blockchainError) {
+      console.error("Blockchain recording error:", blockchainError);
+    }
 
-  // Update main table
-  await pool.query(
-    "UPDATE complaints SET blockchain_tx_hash = $1 WHERE complaint_id = $2",
-    [txHash, newComplaintId.toString()]
-  );
-
-  // Step 7.1: Update status history table with blockchain hash
-  await pool.query(
-    `UPDATE complaint_status_history
-     SET blockchain_tx_hash = $1, updated_at = NOW()
-     WHERE complaint_id = $2 AND status = 'pending'`,
-    [txHash, newComplaintId]
-  );
-
-  console.log(`Blockchain Tx saved: ${txHash}`);
-} catch (blockchainError) {
-  console.error("Blockchain recording error:", blockchainError);
-}
-
-
-    // Step 8: Send email to department
+    // Step 8: email department
     await sendDepartmentEmail(newComplaint.rows[0]);
 
     res.status(201).json({
       message: "Complaint submitted successfully",
       complaint: newComplaint.rows[0],
     });
-
   } catch (error) {
     console.error("Error submitting complaint:", error);
-    res.status(500).json({ message: "Internal Server Error", error: error.message });
+    res.status(500).json({
+      message: "Internal Server Error",
+      error: error.message,
+    });
   }
 });
 
-// ... [Rest of your existing routes remain unchanged]
-
-router.put("/:id/status", async (req, res) => {
-  const { id } = req.params;
-  const { status } = req.body;
-
-  try {
-    const result = await pool.query(
-      "UPDATE complaints SET status = $1 WHERE complaint_id = $2 RETURNING *",
-      [status, id]
-    );
-
-    if (result.rowCount === 0) {
-      return res.status(404).json({ message: "Complaint not found" });
-    }
-
-    res.json({ message: "Status updated", complaint: result.rows[0] });
-  } catch (err) {
-    console.error("Error updating status:", err.message);
-    res.status(500).json({ message: "Server error" });
-  }
-});
+/* ==============================
+   SIMPLE FIELD EDIT ROUTES
+   (description, address)
+   ============================== */
 
 router.put("/:id/description", async (req, res) => {
   const { id } = req.params;
@@ -381,10 +374,16 @@ router.put("/:id/address", async (req, res) => {
   }
 });
 
+/* ==============================
+   ADMIN / OFFICIAL LIST ROUTE
+   ============================== */
+
 router.get("/all", verifyToken, async (req, res) => {
   try {
-    if (req.user.role !== 'official') {
-      return res.status(403).json({ message: "Unauthorized: Only officials can view all complaints" });
+    if (req.user.role !== "official") {
+      return res.status(403).json({
+        message: "Unauthorized: Only officials can view all complaints",
+      });
     }
 
     const department = req.query.department || req.user.department;
@@ -408,53 +407,160 @@ router.get("/all", verifyToken, async (req, res) => {
   }
 });
 
-router.put("/update-status", verifyToken, async (req, res) => {
-  try {
-    const { complaintId, newStatus } = req.body;
+/* ==============================
+   STATUS UPDATE + HASHES
+   (USED BY DEPARTMENT DASHBOARD)
+   PUT /api/complaints/:id/status
+   ============================== */
 
-    if (req.user.role !== 'official') {
-      return res.status(403).json({ message: "Unauthorized: Only officials can update complaint status" });
+router.put("/:id/status", verifyToken, async (req, res) => {
+  try {
+    const complaintId = req.params.id;
+    const { status: newStatus } = req.body;
+
+    if (req.user.role !== "official") {
+      return res.status(403).json({
+        message: "Unauthorized: Only officials can update complaint status",
+      });
     }
 
-    const updateResult = await pool.query(
-      "UPDATE complaints SET status = $1 WHERE complaint_id = $2 RETURNING *",
-      [newStatus, complaintId]
-    );
+    // 1️⃣ Generate blockchain tx hash for this status change
+    let txHash = null;
+    try {
+      txHash = await blockchainService.updateStatus(
+        complaintId.toString(),
+        newStatus
+      );
+    } catch (err) {
+      console.error("Blockchain error:", err);
+      // We still continue; txHash will be null
+    }
+
+    // 2️⃣ Map status -> hash column
+    let columnToUpdate = null;
+    if (newStatus === "pending") columnToUpdate = "pending_hash";
+    if (newStatus === "in-progress") columnToUpdate = "progress_hash";
+    if (newStatus === "resolved") columnToUpdate = "resolved_hash";
+
+    if (!columnToUpdate) {
+      return res.status(400).json({ message: "Invalid status value" });
+    }
+
+    // 3️⃣ Update status + correct hash column
+    const updateQuery = `
+      UPDATE complaints 
+      SET status = $1, ${columnToUpdate} = $2
+      WHERE complaint_id = $3
+      RETURNING *;
+    `;
+
+    const updateResult = await pool.query(updateQuery, [
+      newStatus,
+      txHash,
+      complaintId,
+    ]);
 
     if (updateResult.rows.length === 0) {
       return res.status(404).json({ message: "Complaint not found" });
     }
 
-    try {
-      const txHash = await blockchainService.updateStatus(complaintId.toString(), newStatus);
-      await pool.query(
-        `INSERT INTO complaint_status_history 
-          (complaint_id, status, blockchain_tx_hash) 
-         VALUES ($1, $2, $3)`,
-        [complaintId, newStatus, txHash]
-      );
-      console.log(`Status updated on blockchain for complaint ${complaintId}. Tx: ${txHash}`);
-    } catch (blockchainError) {
-      console.error("Blockchain status update error:", blockchainError);
-    }
-
+    // 4️⃣ Send email to citizen
     await sendCitizenEmail(complaintId, newStatus);
 
     res.json({
-      message: "Status updated and email sent to citizen",
-      complaint: updateResult.rows[0]
+      message: "Status updated successfully",
+      hash_saved_in: columnToUpdate,
+      txHash,
+      complaint: updateResult.rows[0],
     });
   } catch (error) {
     console.error("Error updating complaint status:", error);
-    res.status(500).json({ message: "Internal Server Error", error: error.message });
+    res.status(500).json({
+      message: "Internal Server Error",
+      error: error.message,
+    });
   }
 });
+router.put("/update-status", verifyToken, async (req, res) => {
+  try {
+    const { complaintId, newStatus } = req.body;
+
+    if (req.user.role !== "official") {
+      return res.status(403).json({
+        message: "Unauthorized: Only officials can update complaint status",
+      });
+    }
+
+    console.log(`Updating status for complaint ${complaintId} to "${newStatus}"...`);
+
+    // Blockchain hash generate
+    let txHash = null;
+    try {
+      txHash = await blockchainService.updateStatus(
+        complaintId.toString(),
+        newStatus
+      );
+      console.log("Status updated. Tx hash:", txHash);
+    } catch (err) {
+      console.error("Blockchain error:", err);
+    }
+
+    // Map status → correct hash column
+    let columnToUpdate = null;
+    if (newStatus === "pending") columnToUpdate = "pending_hash";
+    if (newStatus === "in-progress") columnToUpdate = "progress_hash";
+    if (newStatus === "resolved") columnToUpdate = "resolved_hash";
+
+    if (!columnToUpdate) {
+      return res.status(400).json({ message: "Invalid status value" });
+    }
+
+    // Update status + hash
+    const updateQuery = `
+      UPDATE complaints 
+      SET status = $1, ${columnToUpdate} = $2
+      WHERE complaint_id = $3
+      RETURNING *;
+    `;
+
+    const updateResult = await pool.query(updateQuery, [
+      newStatus,
+      txHash,
+      complaintId,
+    ]);
+
+    if (updateResult.rowCount === 0) {
+      return res.status(404).json({ message: "Complaint not found" });
+    }
+
+    // Email to citizen
+    await sendCitizenEmail(complaintId, newStatus);
+
+    res.json({
+      message: "Status updated successfully",
+      hash_saved_in: columnToUpdate,
+      txHash,
+      complaint: updateResult.rows[0],
+    });
+  } catch (error) {
+    console.error("Error updating complaint status:", error);
+    res.status(500).json({
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+});
+
+
+/* ==============================
+   CITIZEN: MY COMPLAINTS
+   ============================== */
 
 router.get("/my-complaints", verifyToken, async (req, res) => {
   try {
     console.log("=== MY COMPLAINTS ENDPOINT CALLED ===");
     console.log("User from token:", req.user);
-    
+
     const citizenEmail = req.user.email;
     console.log("Filtering by citizen email:", citizenEmail);
 
@@ -467,7 +573,9 @@ router.get("/my-complaints", verifyToken, async (req, res) => {
         description,
         status,
         image_url,
-        blockchain_tx_hash,
+        pending_hash,
+        progress_hash,
+        resolved_hash,
         latitude,
         longitude,
         address,
@@ -478,13 +586,19 @@ router.get("/my-complaints", verifyToken, async (req, res) => {
       [citizenEmail]
     );
 
-    console.log(`Found ${complaints.rows.length} complaints for email: ${citizenEmail}`);
+    console.log(
+      `Found ${complaints.rows.length} complaints for email: ${citizenEmail}`
+    );
     res.json(complaints.rows);
   } catch (error) {
     console.error("Error fetching complaints:", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
+
+/* ==============================
+   BLOCKCHAIN VERIFICATION
+   ============================== */
 
 router.get("/verify/:id", verifyToken, async (req, res) => {
   try {
@@ -502,8 +616,13 @@ router.get("/verify/:id", verifyToken, async (req, res) => {
     const dbComplaint = dbResult.rows[0];
 
     try {
-      const blockchainData = await blockchainService.getComplaint(complaintId.toString());
-      const latestBlockchainStatus = blockchainData.statusUpdates[blockchainData.statusUpdates.length - 1];
+      const blockchainData = await blockchainService.getComplaint(
+        complaintId.toString()
+      );
+      const latestBlockchainStatus =
+        blockchainData.statusUpdates[
+          blockchainData.statusUpdates.length - 1
+        ];
       const isVerified = dbComplaint.status === latestBlockchainStatus;
 
       res.json({
@@ -515,15 +634,15 @@ router.get("/verify/:id", verifyToken, async (req, res) => {
         blockchainRecord: {
           complaintId: blockchainData.complaintId,
           createdAt: blockchainData.timestamp,
-          statusHistory: blockchainData.statusUpdates
-        }
+          statusHistory: blockchainData.statusUpdates,
+        },
       });
     } catch (blockchainError) {
       console.error("Blockchain verification error:", blockchainError);
       res.status(500).json({
         verified: false,
         message: "Failed to verify on blockchain",
-        error: blockchainError.message
+        error: blockchainError.message,
       });
     }
   } catch (error) {

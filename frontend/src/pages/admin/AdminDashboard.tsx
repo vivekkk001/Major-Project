@@ -39,7 +39,7 @@ const AdminDashboard: React.FC = () => {
       {/* Top Bar */}
       <div className="fixed top-0 left-0 w-full z-50 bg-slate-900/60 backdrop-blur-md border-b border-slate-700 px-6 py-4 flex items-center justify-between">
         <div
-          className="flex items-center space-x-2 cursor"
+          className="flex items-center space-x-2 cursor-default"
           onClick={() => navigate('')}
         >
           <ShieldCheck className="text-teal-400 h-6 w-6" />
@@ -47,14 +47,13 @@ const AdminDashboard: React.FC = () => {
         </div>
 
         <button
-          onClick={handleLogout}
+          onClick={() => navigate('/home')}
           className="glass px-4 py-2 rounded text-red-400 hover:bg-red-400 hover:text-white transition-all text-sm flex items-center space-x-2"
         >
           <LogOut className="h-4 w-4" />
           <span>Logout</span>
         </button>
       </div>
-
 
       <div className="relative pt-24 pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
@@ -75,7 +74,7 @@ const AdminDashboard: React.FC = () => {
                 <span className="text-xs text-gray-400 bg-blue-400/10 px-2 py-1 rounded">Management</span>
               </div>
               <h3 className="text-lg font-semibold text-white mb-2">User Management</h3>
-              <p className="text-gray-400 text-sm mb-4">View, edit, or delete citizen records</p>
+              <p className="text-gray-400 text-sm mb-4">View or Delete Citizen Records</p>
               <button
                 onClick={() => navigate('/admin/users')}
                 className="w-full glass-dark py-2 px-4 rounded text-blue-400 hover:bg-blue-400 hover:text-white transition-all text-sm"
@@ -91,7 +90,7 @@ const AdminDashboard: React.FC = () => {
                 <span className="text-xs text-gray-400 bg-purple-400/10 px-2 py-1 rounded">Departments</span>
               </div>
               <h3 className="text-lg font-semibold text-white mb-2">Department Control</h3>
-              <p className="text-gray-400 text-sm mb-4">Add, edit, or remove department officials</p>
+              <p className="text-gray-400 text-sm mb-4">View or Delete Complaint Records</p>
               <button
                 onClick={() => navigate('/admin/departments')}
                 className="w-full glass-dark py-2 px-4 rounded text-purple-400 hover:bg-purple-400 hover:text-white transition-all text-sm"

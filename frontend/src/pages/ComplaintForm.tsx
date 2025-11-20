@@ -13,8 +13,8 @@ const ComplaintForm = () => {
   const [showCamera, setShowCamera] = useState(false);
   const [stream, setStream] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
-  
-  // 🆕 CAPTCHA States
+
+  // CAPTCHA States
   const [captchaSvg, setCaptchaSvg] = useState('');
   const [captchaInput, setCaptchaInput] = useState('');
   const [captchaLoading, setCaptchaLoading] = useState(false);
@@ -22,14 +22,14 @@ const ComplaintForm = () => {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const debounceTimer = useRef(null);
-  const API_BASE_URL = 'http://localhost:5000'; // Replace with your actual API URL
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
-  // 🆕 Load CAPTCHA on component mount
+  // Load CAPTCHA on component mount
   useEffect(() => {
     loadCaptcha();
   }, []);
 
-  // 🆕 Load CAPTCHA Function
+  // Load CAPTCHA Function
   const loadCaptcha = async () => {
     setCaptchaLoading(true);
     try {
@@ -64,7 +64,7 @@ const ComplaintForm = () => {
       setSuggestions([]);
       return;
     }
-    
+
     setAiLoading(true);
     try {
       const response = await fetch(`${API_BASE_URL}/api/complaints/generate-suggestions`, {
@@ -91,11 +91,11 @@ const ComplaintForm = () => {
   const handleDescriptionChange = (e) => {
     const value = e.target.value;
     setDescription(value);
-    
+
     if (debounceTimer.current) {
       clearTimeout(debounceTimer.current);
     }
-    
+
     if (value.length > 3) {
       debounceTimer.current = setTimeout(() => {
         handleAIHelp(value);
@@ -225,7 +225,7 @@ const ComplaintForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!captchaInput || captchaInput.trim() === '') {
       setMessage('Please enter the CAPTCHA code.');
       return;
@@ -261,10 +261,10 @@ const ComplaintForm = () => {
 
       if (res.status === 201) {
         setMessage('Complaint submitted successfully! Redirecting...');
-        
+
         // Wait 1.5 seconds to show success message, then redirect
         setTimeout(() => {
-          window.location.href = 'http://localhost:5173/my-complaints';
+          window.location.href = `${import.meta.env.VITE_FRONTEND_URL}/my-complaints`;
         }, 1500);
       } else {
         throw new Error(data.message || 'Something went wrong');
@@ -273,7 +273,7 @@ const ComplaintForm = () => {
       console.error(err);
       const errorMsg = err.message || 'Something went wrong.';
       setMessage(errorMsg);
-      
+
       if (errorMsg.includes('CAPTCHA')) {
         loadCaptcha();
       }
@@ -317,8 +317,8 @@ const ComplaintForm = () => {
 
           {message && (
             <div className={`mb-6 px-4 py-3 rounded-lg glass border ${message.includes('successfully') || message.includes('fetched')
-                ? 'border-green-400/30 bg-green-400/10 text-green-300'
-                : 'border-red-400/30 bg-red-400/10 text-red-300'
+              ? 'border-green-400/30 bg-green-400/10 text-green-300'
+              : 'border-red-400/30 bg-red-400/10 text-red-300'
               }`}>
               <div className="flex items-center space-x-2">
                 <AlertCircle className="h-4 w-4 flex-shrink-0" />
@@ -343,7 +343,7 @@ const ComplaintForm = () => {
                 placeholder="Type a keyword like 'pothole', 'garbage', 'streetlight'..."
                 className="w-full p-4 rounded-lg glass border border-white/20 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-400/50 focus:border-teal-400/50 transition-all backdrop-blur-sm"
               />
-              
+
               {suggestions.length > 0 && (
                 <div className="glass border border-purple-400/30 bg-purple-400/10 p-4 rounded-lg space-y-3 animate-fadeIn">
                   <div className="space-y-2">
@@ -494,7 +494,7 @@ const ComplaintForm = () => {
               )}
             </div>
 
-            {/* 🆕 CAPTCHA Section */}
+            {/* CAPTCHA Section */}
             <div className="space-y-4">
               <label className="text-lg font-medium text-white flex items-center space-x-2">
                 <Shield className="h-5 w-5" />
@@ -504,7 +504,7 @@ const ComplaintForm = () => {
 
               <div className="glass border border-white/20 p-4 rounded-lg space-y-4">
                 <div className="flex items-center gap-4">
-                  <div 
+                  <div
                     className="flex-1 bg-slate-800 rounded-lg p-3 flex items-center justify-center border border-white/10"
                     dangerouslySetInnerHTML={{ __html: captchaSvg }}
                   />

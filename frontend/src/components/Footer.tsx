@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
+import { Shield, Mail, Phone, MapPin } from 'lucide-react';
 
 const Footer: React.FC = () => {
   return (
@@ -21,20 +21,6 @@ const Footer: React.FC = () => {
             <p className="text-gray-400 text-sm leading-relaxed">
               Empowering citizens to create positive change through efficient complaint management and government transparency.
             </p>
-            {/* <div className="flex space-x-4">
-              <a href="#" className="text-gray-400 hover:text-teal-400 transition-colors hover-lift">
-                <Facebook className="h-5 w-5" />
-              </a>
-              <a href="#" className="text-gray-400 hover:text-teal-400 transition-colors hover-lift">
-                <Twitter className="h-5 w-5" />
-              </a>
-              <a href="#" className="text-gray-400 hover:text-teal-400 transition-colors hover-lift">
-                <Instagram className="h-5 w-5" />
-              </a>
-              <a href="#" className="text-gray-400 hover:text-teal-400 transition-colors hover-lift">
-                <Linkedin className="h-5 w-5" />
-              </a>
-            </div> */}
           </div>
 
           {/* Quick Links */}
@@ -79,7 +65,6 @@ const Footer: React.FC = () => {
           </div>
         </div>
 
-        {/* Bottom Section */}
         {/* Bottom Section */}
         <div className="border-t border-slate-800 mt-8 pt-8 flex flex-col md:flex-row items-center justify-between">
           <p className="text-gray-400 text-sm">
