@@ -10,8 +10,10 @@ const app = express();
 
 // --- Setup CORS ---
 const allowedOrigins = [
-  process.env.LOCAL_DEV_URL,
-  process.env.FRONTEND_URL,
+  "https://smartcivic.tech",
+  "https://www.smartcivic.tech",
+  process.env.FRONTEND_URL,       // ex: http://localhost:5173
+  process.env.LOCAL_DEV_URL,      // ex: http://localhost:3000
 ];
 
 app.use(cors({
