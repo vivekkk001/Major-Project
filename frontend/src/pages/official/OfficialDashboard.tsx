@@ -227,6 +227,7 @@ const OfficialDashboard: React.FC = () => {
                       <label className="block text-sm text-gray-300 mb-1">
                         Update Status
                       </label>
+
                       <select
                         value={status}
                         onChange={(e) => handleChange(id, e.target.value)}
@@ -234,7 +235,7 @@ const OfficialDashboard: React.FC = () => {
                       >
                         <option value="Pending">Pending</option>
                         <option value="In Progress">In Progress</option>
-                        <option value="Resolved">Resolved</option>
+                        {/* Officials cannot resolve */}
                       </select>
 
                       {status !== c.status && (
@@ -246,6 +247,7 @@ const OfficialDashboard: React.FC = () => {
                         </button>
                       )}
                     </div>
+
                   </div>
                 );
               })

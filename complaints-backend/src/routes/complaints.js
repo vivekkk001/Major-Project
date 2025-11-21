@@ -485,39 +485,53 @@ router.put("/update-status", verifyToken, async (req, res) => {
   try {
     const { complaintId, newStatus } = req.body;
 
-    if (req.user.role !== "official") {
-      return res.status(403).json({
-        message: "Unauthorized: Only officials can update complaint status",
-      });
+    console.log(`Updating status for complaint ${complaintId} to "${newStatus}"`);
+
+    /* -----------------------------------
+       ROLE-BASED CONTROL
+    ----------------------------------- */
+
+    // OFFICIAL = ONLY pending → in-progress
+    if (req.user.role === "official") {
+      if (newStatus !== "in-progress") {
+        return res.status(403).json({
+          message: "Officials can only update status to 'in-progress'.",
+        });
+      }
     }
 
-    console.log(`Updating status for complaint ${complaintId} to "${newStatus}"...`);
+    // CITIZEN = ONLY in-progress → resolved
+    if (req.user.role === "citizen") {
+      if (newStatus !== "resolved") {
+        return res.status(403).json({
+          message: "Citizens can only mark complaints as 'resolved'.",
+        });
+      }
+    }
 
-    // Blockchain hash generate
+    /* -----------------------------------
+       BLOCKCHAIN HASH
+    ----------------------------------- */
     let txHash = null;
     try {
       txHash = await blockchainService.updateStatus(
         complaintId.toString(),
         newStatus
       );
-      console.log("Status updated. Tx hash:", txHash);
     } catch (err) {
       console.error("Blockchain error:", err);
     }
 
-    // Map status → correct hash column
+    /* -----------------------------------
+       MAP STATUS → HASH COLUMN
+    ----------------------------------- */
     let columnToUpdate = null;
     if (newStatus === "pending") columnToUpdate = "pending_hash";
     if (newStatus === "in-progress") columnToUpdate = "progress_hash";
     if (newStatus === "resolved") columnToUpdate = "resolved_hash";
 
-    if (!columnToUpdate) {
-      return res.status(400).json({ message: "Invalid status value" });
-    }
-
-    // Update status + hash
     const updateQuery = `
-      UPDATE complaints 
+      UPDATE complaints
       SET status = $1, ${columnToUpdate} = $2
       WHERE complaint_id = $3
       RETURNING *;
@@ -533,23 +547,29 @@ router.put("/update-status", verifyToken, async (req, res) => {
       return res.status(404).json({ message: "Complaint not found" });
     }
 
-    // Email to citizen
-    await sendCitizenEmail(complaintId, newStatus);
+    /* -----------------------------------
+       EMAIL NOTIFICATION  
+       (Only officials trigger emails)
+    ----------------------------------- */
+    if (req.user.role === "official") {
+      await sendCitizenEmail(complaintId, newStatus);
+    }
 
     res.json({
       message: "Status updated successfully",
-      hash_saved_in: columnToUpdate,
       txHash,
+      hash_saved_in: columnToUpdate,
       complaint: updateResult.rows[0],
     });
   } catch (error) {
-    console.error("Error updating complaint status:", error);
+    console.error("Error updating complaint:", error);
     res.status(500).json({
       message: "Internal Server Error",
       error: error.message,
     });
   }
 });
+
 
 
 /* ==============================
