@@ -174,6 +174,33 @@ const MyComplaints: React.FC = () => {
                         </button>
                       )}
 
+                      {/* USER — Mark complaint as resolved */}
+                      {complaint.status === "in-progress" && (
+                        <button
+                          onClick={async () => {
+                            try {
+                              await axios.put(
+                                `${import.meta.env.VITE_API_BASE_URL}/api/complaints/update-status`,
+                                {
+                                  complaintId: complaint.complaint_id,
+                                  newStatus: "resolved",
+                                },
+                                { withCredentials: true }
+                              );
+                              alert("Complaint marked as resolved!");
+                              window.location.reload();
+                            } catch (err) {
+                              alert("Failed to update status.");
+                              console.error(err);
+                            }
+                          }}
+                          className="flex-1 glass glow px-5 py-3 rounded-lg text-green-400 hover:bg-green-400 hover:text-white transition-all"
+                        >
+                          Mark as Resolved
+                        </button>
+                      )}
+
+
                     </div>
 
                   </div>
