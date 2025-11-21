@@ -1,20 +1,17 @@
-require("@nomicfoundation/hardhat-toolbox");
+require("@nomicfoundation/hardhat-verify");
 require("dotenv").config();
 
-// Private key from your .env file
-const PRIVATE_KEY = process.env.PRIVATE_KEY;
+const { BLOCKCHAIN_RPC_URL, PRIVATE_KEY, ETHERSCAN_API_KEY } = process.env;
 
-/** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
-  solidity: "0.8.28", // Updated to match your contract's pragma
+  solidity: "0.8.28",
   networks: {
-    // Hardhat's built-in local network
-    hardhat: {},
-    
-    // Ganache local network
-    ganache: {
-      url: "http://127.0.0.1:7545", // Default Ganache port
+    sepolia: {
+      url: BLOCKCHAIN_RPC_URL || "",
       accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
-    }
+    },
+  },
+  etherscan: {
+    apiKey: ETHERSCAN_API_KEY,
   }
 };
