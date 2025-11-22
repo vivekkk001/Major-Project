@@ -153,15 +153,31 @@ const Navbar = () => {
         {/* Mobile Menu */}
         {!hideUserUI && isOpen && (
           <div className="md:hidden glass rounded-lg p-4 space-y-4 mt-4">
+
             <Link to="/home" onClick={() => setIsOpen(false)} className="block text-gray-300 hover:text-teal-400">
               Home
             </Link>
+
             <Link to="/complaint" onClick={() => setIsOpen(false)} className="block text-gray-300 hover:text-teal-400">
               File Complaint
             </Link>
+
             <Link to="/my-complaints" onClick={() => setIsOpen(false)} className="block text-gray-300 hover:text-teal-400">
               Track Issues
             </Link>
+
+            {/* 🔥 Added Profile & My Complaints Here */}
+            {isAuthenticated && (
+              <>
+                <Link to="/profile" onClick={() => setIsOpen(false)} className="block text-gray-300 hover:text-teal-400">
+                  Profile
+                </Link>
+
+                <Link to="/my-complaints" onClick={() => setIsOpen(false)} className="block text-gray-300 hover:text-teal-400">
+                  My Complaints
+                </Link>
+              </>
+            )}
 
             <hr className="border-gray-700" />
 
@@ -184,6 +200,7 @@ const Navbar = () => {
             )}
           </div>
         )}
+
       </div>
     </nav>
   );

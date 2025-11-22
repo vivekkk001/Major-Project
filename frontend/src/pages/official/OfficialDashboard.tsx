@@ -240,12 +240,87 @@ const OfficialDashboard: React.FC = () => {
 
                       {status !== c.status && (
                         <button
-                          onClick={() => handleSaveStatus(id)}
-                          className="mt-2 ml-3 bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-600"
+                          disabled={c.loading}
+                          onClick={async () => {
+                            // Set loading for this complaint
+                            setComplaints(prev =>
+                              prev.map(item =>
+                                item.complaint_id === id ? { ...item, loading: true } : item
+                              )
+                            );
+
+                            const uiStatus = editedStatuses[id];
+                            const newStatus = mapUIToBackend(uiStatus);
+
+                            const confirm = window.prompt(
+                              `Type 'save' to confirm updating the status of Complaint ID ${id}`
+                            );
+                            if (!confirm || confirm.trim().toLowerCase() !== "save") {
+                              alert("Update canceled.");
+
+                              setComplaints(prev =>
+                                prev.map(item =>
+                                  item.complaint_id === id ? { ...item, loading: false } : item
+                                )
+                              );
+
+                              return;
+                            }
+
+                            try {
+                              const res = await axios.put(
+                                `${import.meta.env.VITE_API_BASE_URL}/api/complaints/update-status`,
+                                {
+                                  complaintId: id,
+                                  newStatus: newStatus,
+                                },
+                                { headers: { Authorization: `Bearer ${token}` } }
+                              );
+
+                              const updated = res.data.complaint;
+
+                              // Update UI instantly
+                              setComplaints(prev =>
+                                prev.map(item =>
+                                  item.complaint_id === id
+                                    ? { ...item, ...updated, status: uiStatus, loading: false }
+                                    : item
+                                )
+                              );
+
+                              // Remove edited status selection
+                              const updatedList = { ...editedStatuses };
+                              delete updatedList[id];
+                              setEditedStatuses(updatedList);
+
+                              alert("Status updated successfully!");
+                            } catch (err) {
+                              console.error("Error updating status:", err);
+                              alert("Failed to update status.");
+
+                              setComplaints(prev =>
+                                prev.map(item =>
+                                  item.complaint_id === id ? { ...item, loading: false } : item
+                                )
+                              );
+                            }
+                          }}
+                          className={`mt-2 ml-3 px-4 py-2 rounded text-white transition-all ${c.loading
+                            ? "bg-orange-300 cursor-not-allowed opacity-60"
+                            : "bg-orange-500 hover:bg-orange-600"
+                            }`}
                         >
-                          Save Status
+                          {c.loading ? (
+                            <div className="flex items-center space-x-2">
+                              <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
+                              <span>Saving...</span>
+                            </div>
+                          ) : (
+                            "Save Status"
+                          )}
                         </button>
                       )}
+
                     </div>
 
                   </div>
@@ -260,21 +335,26 @@ const OfficialDashboard: React.FC = () => {
 
       {/* Image Modal */}
       {isModalOpen && selectedImage && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex justify-center items-center z-50">
-          <div className="relative max-w-2xl w-full bg-slate-800 border border-gray-600 rounded-2xl p-4 shadow-lg">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex justify-center items-center z-50">
+          <div className="relative w-[90vw] max-w-5xl bg-slate-800 border border-gray-600 rounded-2xl p-4 shadow-lg">
+
+            {/* Close button */}
             <button
               onClick={closeModal}
               className="absolute top-3 right-3 bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-full text-sm font-medium"
             >
               ×
             </button>
+
+            {/* Fullscreen responsive image */}
             <img
               src={selectedImage}
-              className="w-full h-auto rounded-xl mt-2"
+              className="w-full max-h-[80vh] object-contain rounded-xl mt-2"
             />
           </div>
         </div>
       )}
+
     </div>
   );
 };

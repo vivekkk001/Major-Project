@@ -264,7 +264,8 @@ const ComplaintForm = () => {
 
         // Wait 1.5 seconds to show success message, then redirect
         setTimeout(() => {
-          window.location.href = `${import.meta.env.VITE_FRONTEND_URL}/my-complaints`;
+          window.location.href = "/my-complaints";
+          ;
         }, 1500);
       } else {
         throw new Error(data.message || 'Something went wrong');

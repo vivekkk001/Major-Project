@@ -81,18 +81,16 @@ const ComplaintCard: React.FC<ComplaintCardProps> = ({
         </div>
       </div>
 
-      <div className="mt-4 pt-4 border-t border-gray-700/50">
-        <p className="text-xs text-gray-500">
-          Complaint ID: <span className="text-teal-400 font-mono">{complaint_id}</span>
-        </p>
-        {image_url && (
+      <div className="mt-4">
+        <div className="w-full md:h-80 h-56 rounded-lg overflow-hidden border border-gray-700">
           <img
             src={image_url}
             alt="Complaint"
-            className="mt-4 rounded-md border border-gray-700 max-w-xs"
+            className="w-full h-full object-cover"
           />
-        )}
+        </div>
       </div>
+
     </div>
   );
 };
