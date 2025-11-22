@@ -191,7 +191,6 @@ const MyComplaints: React.FC = () => {
                         {/* USER — Mark complaint as resolved */}
                         {complaint.status === "in-progress" && (
                           <button
-                            disabled={complaint.loading}
                             onClick={async () => {
                               setComplaints(prev =>
                                 prev.map(c =>
@@ -200,7 +199,6 @@ const MyComplaints: React.FC = () => {
                                     : c
                                 )
                               );
-
                               try {
                                 const res = await axios.put(
                                   `${import.meta.env.VITE_API_BASE_URL}/api/complaints/update-status`,
@@ -210,9 +208,7 @@ const MyComplaints: React.FC = () => {
                                   },
                                   { withCredentials: true }
                                 );
-
                                 const updated = res.data.complaint;
-
                                 // update UI without reload
                                 setComplaints(prev =>
                                   prev.map(c =>
@@ -233,22 +229,20 @@ const MyComplaints: React.FC = () => {
                                 );
                               }
                             }}
-                            className={`flex-1 glass glow px-5 py-3 rounded-lg transition-all ${complaint.loading
-                              ? "opacity-60 cursor-not-allowed"
-                              : "text-green-400 hover:bg-green-400 hover:text-white"
+                            className={`flex-1 px-5 py-3 rounded-lg font-semibold transition-all duration-300 ${complaint.loading
+                                ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                                : "bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:from-green-600 hover:to-emerald-600 hover:shadow-lg hover:scale-105"
                               }`}
+                            disabled={complaint.loading}
                           >
                             {complaint.loading ? (
-                              <div className="flex justify-center items-center space-x-2">
-                                <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
-                                <span className="text-white">Updating...</span>
-
-                              </div>
+                              "Updating..."
                             ) : (
                               "Mark as Resolved"
                             )}
                           </button>
                         )}
+
 
                       </div>
 
